@@ -1,0 +1,32 @@
+{
+  "brand": "MICU3 System",
+  "online": "Online",
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "personnel": "Personnel",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "warningTitle": "Alert / Warning",
+    "warningItems": [
+      "Doctor license expires in 7 days",
+      "Nurse shift conflict in Unit B",
+      "ICU bed #06 requires maintenance"
+    ],
+    "totalPersonnel": "Total Personnel",
+    "activePatients": "Active Patients",
+    "availableBeds": "Available Beds",
+    "pendingAdmissions": "Pending Admissions",
+    "bedMapping": "Bed Mapping",
+    "register": "Register Patient",
+    "chartTitle": "Monthly ICU Statistics"
+  },
+  "login": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Login"
+  }
+}
