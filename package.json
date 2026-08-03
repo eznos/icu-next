@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "api": "bun run server/index.ts"
   },
   "dependencies": {
@@ -18,9 +18,10 @@
     "@mui/material-nextjs": "^5.16.7",
     "elysia": "^1.1.23",
     "next": "^15.0.0",
-    "next-intl": "^3.22.0",
+    "next-intl": "^4.13.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "sharp": "^0.35.0",
     "swr": "^2.2.5"
   },
   "devDependencies": {
@@ -30,5 +31,8 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.0.0",
     "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "sharp": "^0.35.0"
   }
 }
