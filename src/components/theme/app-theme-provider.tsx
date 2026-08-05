@@ -1,10 +1,10 @@
 'use client';
 
-import {CssBaseline, ThemeProvider as MuiThemeProvider, createTheme} from '@mui/material';
-import {createContext, useContext, useEffect, useMemo, useState} from 'react';
-import type {ReactNode} from 'react';
+import { CssBaseline, ThemeProvider as MuiThemeProvider, createTheme } from '@mui/material';
+import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-type ThemeMode = 'light' | 'dark';
+type ThemeMode = 'light' | 'dark' 
 
 type ThemeModeContextValue = {
   mode: ThemeMode;
@@ -34,12 +34,12 @@ export function AppThemeProvider({children}: {children: ReactNode}) {
       return nextMode;
     });
   };
-
+  // TODO FIX Theme
   const theme = useMemo(
     () =>
       createTheme({
         palette: {
-          mode,
+          mode: mode,
           primary: {
             main: '#14B8A6'
           },
