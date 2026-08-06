@@ -1,6 +1,11 @@
-import { cors } from '@elysiajs/cors' // 1. Import cors เข้ามา
+import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
 import { Elysia } from 'elysia'
+import { connectDB } from './db'
+import { dashboardRoutes } from './routes/dashboard.route'
+import { movieRoutes } from './routes/movie.route'
+import { patientRoutes } from './routes/patient.route'
+
 export type DashboardResponse = {
  summary: {
   totalPersonnel: number
@@ -17,32 +22,12 @@ export type DashboardResponse = {
  monthlyAdmissions: number[]
 }
 
-const dashboardData: DashboardResponse = {
- summary: {
-  totalPersonnel: 3,
-  activePatients: 7,
-  availableBeds: 5,
-  pendingAdmissions: 2,
- },
- beds: [
-  {
-   id: 'ICU-01323',
-   status: 'Occupied',
-   patientName: 'Somchai Jaidee',
-   hn: 'HN-000123',
-  },
-  { id: 'ICU-02', status: 'Available', patientName: '-', hn: '-' },
-  { id: 'ICU-03', status: 'Available', patientName: '-', hn: '-' },
-  {
-   id: 'ICU-04',
-   status: 'Occupied',
-   patientName: 'Narin K.',
-   hn: 'HN-000456',
-  },
- ],
- monthlyAdmissions: [24, 31, 27, 36, 29, 35],
+// 🌟 1. ให้ต่อ DB เฉพาะเมื่อไม่ใช่ช่วง Phase การ Build ของ Vercel
+if (process.env.MONGODB_URI) {
+ connectDB()
 }
 
+// 🌟 2. ประกาศและ Export app โดยไม่มี .listen() ต่อท้ายใน Chain
 export const app = new Elysia({ prefix: '/api' })
  .use(
   swagger({
@@ -54,7 +39,6 @@ export const app = new Elysia({ prefix: '/api' })
    },
   }),
  )
-
  .use(
   cors({
    origin: [
@@ -64,7 +48,17 @@ export const app = new Elysia({ prefix: '/api' })
   }),
  )
  .get('/health', () => ({ status: 'ok' }))
- .get('/dashboard', () => dashboardData)
- .listen(3001)
+ .use(dashboardRoutes)
+ .use(patientRoutes)
+ .use(movieRoutes)
 
-console.log(`Elysia API running on ${app.server?.url}`)
+// 🌟 3. สั่ง .listen() เฉพาะตอนรัน Local ด้วย Bun เท่านั้น (ลบ .listen(3001) และ console.log ตัวเดิมออก)
+if (
+ process.env.NODE_ENV !== 'production' &&
+ typeof process.versions === 'object' &&
+ typeof process.versions.bun !== 'undefined'
+) {
+ app.listen(3001, () => {
+  console.log(`Elysia API running on http://localhost:3001`)
+ })
+}

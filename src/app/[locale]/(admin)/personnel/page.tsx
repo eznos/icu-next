@@ -1,5 +1,12 @@
-import {Typography} from '@mui/material';
+'use client' // 🌟 แก้ไขบรรทัดนี้ให้ถูกต้อง
+
+import { fetchMovieListList } from '@/lib/movies/api'
+import { Typography } from '@mui/material'
+import useSWR from 'swr'
 
 export default function PersonnelPage() {
-  return <Typography variant="h5">Personnel</Typography>;
+ const { data } = useSWR('movies', fetchMovieListList, {})
+ console.log(data)
+
+ return <Typography variant='h5'>Personnel</Typography>
 }
