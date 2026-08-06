@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslationsNext } from '@/i18n/use-translate-next'
 import { fetchDashboardData } from '@/lib/api'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
 import {
@@ -13,7 +14,6 @@ import {
  Stack,
  Typography,
 } from '@mui/material'
-import { useTranslations } from 'next-intl'
 import useSWR from 'swr'
 
 const summaryKeys = [
@@ -24,7 +24,7 @@ const summaryKeys = [
 ] as const
 
 export default function DashboardPage() {
- const t = useTranslations('dashboard')
+ const t = useTranslationsNext('dashboard')
  const { data } = useSWR('dashboard', fetchDashboardData, {})
 
  return (
@@ -56,7 +56,7 @@ export default function DashboardPage() {
      <Grid key={key} item xs={12} sm={6} lg={3}>
       <Card>
        <CardContent>
-        <Typography variant='body2' color='text.secondary' gutterBottom>
+        <Typography variant='body2' color='text.secondary'>
          {t(key)}
         </Typography>
         <Typography variant='h4' fontWeight={700}>

@@ -1,0 +1,35 @@
+{
+ "navBar": {
+  "brand": "MICU3 System",
+  "online": "ออนไลน์"
+ },
+
+ "sidebar": {
+  "dashboard": "แดชบอร์ด",
+  "personnel": "บุคลากร",
+  "reports": "รายงาน",
+  "settings": "ตั้งค่า"
+ },
+ "dashboard": {
+  "title": "แดชบอร์ด",
+  "warningTitle": "แจ้งเตือน / คำเตือน",
+  "warningItems": [
+   "ใบอนุญาตแพทย์จะหมดอายุใน 7 วัน",
+   "ตารางเวรพยาบาลซ้ำซ้อนในหน่วย B",
+   "เตียง ICU #06 ต้องซ่อมบำรุง"
+  ],
+  "totalPersonnel": "บุคลากรทั้งหมด",
+  "activePatients": "ผู้ป่วยปัจจุบัน",
+  "availableBeds": "เตียงว่าง",
+  "pendingAdmissions": "รอรับเข้า",
+  "bedMapping": "ผังเตียง",
+  "register": "ลงทะเบียนผู้ป่วย",
+  "chartTitle": "สถิติ ICU รายเดือน"
+ },
+ "login": {
+  "title": "เข้าสู่ระบบ",
+  "username": "ชื่อผู้ใช้",
+  "password": "รหัสผ่าน",
+  "submit": "เข้าสู่ระบบ"
+ }
+}

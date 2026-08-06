@@ -1,27 +1,38 @@
-import type {ReactNode} from 'react';
-import {NextIntlClientProvider} from 'next-intl';
-import {getMessages} from 'next-intl/server';
-import {notFound} from 'next/navigation';
-import {AppProviders} from '@/components/providers/app-providers';
-import {routing} from '@/i18n/routing';
+// src/app/[locale]/layout.tsx
+import { NextIntlClientProvider } from 'next-intl'
+// 1. นำเข้า setRequestLocale เพิ่มเติม
 
-type LocaleLayoutProps = {
-  children: ReactNode;
-  params: Promise<{locale: string}>;
-};
+import { AppThemeProvider } from '@/components/theme/app-theme-provider'
+import { routing } from '@/i18n/routing'
+import { getMessages, setRequestLocale } from 'next-intl/server'
+import { notFound } from 'next/navigation'
 
-export default async function LocaleLayout({children, params}: LocaleLayoutProps) {
-  const {locale} = await params;
+export default async function LocaleLayout({
+ children,
+ params,
+}: {
+ children: React.ReactNode
+ params: Promise<{ locale: string }>
+}) {
+ const { locale } = await params
 
-  if (!routing.locales.includes(locale as 'en' | 'th')) {
-    notFound();
-  }
+ if (!routing.locales.includes(locale as any)) {
+  notFound()
+ }
 
-  const messages = await getMessages();
+ // 🚨 2. บังคับเซ็ต Locale สำหรับหน้านี้โดยตรง (แก้ปัญหา undefined หายขาด)
+ setRequestLocale(locale)
 
-  return (
+ // หลังจากบรรทัดบน getMessages จะรู้ทันทีว่าต้องโหลดภาษาอะไร
+ const messages = await getMessages()
+
+ return (
+  <html lang={locale}>
+   <body>
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <AppProviders>{children}</AppProviders>
+     <AppThemeProvider>{children}</AppThemeProvider>
     </NextIntlClientProvider>
-  );
+   </body>
+  </html>
+ )
 }
