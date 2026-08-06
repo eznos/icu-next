@@ -31,6 +31,8 @@ if (process.env.MONGODB_URI) {
 export const app = new Elysia({ prefix: '/api' })
  .use(
   swagger({
+   provider: 'scalar', // หรือ 'scalar'
+   path: '/swagger',
    documentation: {
     info: {
      title: 'Elysia Documentation',
