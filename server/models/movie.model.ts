@@ -1,49 +1,8 @@
 import mongoose, { Document, Schema } from 'mongoose'
+import { MoviesType } from '../types'
 
 // 1. สร้าง Interface สำหรับ TypeScript (ถ้าคุณใช้ TypeScript)
-export interface IMovie extends Document {
- plot?: string
- genres?: string[]
- runtime?: number
- cast?: string[]
- poster?: string
- title: string
- fullplot?: string
- languages?: string[]
- released?: Date
- directors?: string[]
- rated?: string
- awards?: {
-  wins?: number
-  nominations?: number
-  text?: string
- }
- lastupdated?: string // หรือจะใช้ Date ก็ได้ขึ้นอยู่กับการจัดการในระบบคุณ
- year?: number
- imdb?: {
-  rating?: number
-  votes?: number
-  id?: number
- }
- countries?: string[]
- type?: string
- tomatoes?: {
-  viewer?: {
-   rating?: number
-   numReviews?: number
-   meter?: number
-  }
-  fresh?: number
-  critic?: {
-   rating?: number
-   numReviews?: number
-   meter?: number
-  }
-  rotten?: number
-  lastUpdated?: Date
- }
- num_mflix_comments?: number
-}
+export interface IMovie extends Document, MoviesType {}
 
 // 2. สร้าง Mongoose Schema
 const MovieSchema = new Schema<IMovie>(
@@ -91,7 +50,19 @@ const MovieSchema = new Schema<IMovie>(
   num_mflix_comments: { type: Number, default: 0 },
  },
  {
-  timestamps: true, // เพิ่ม createdAt และ updatedAt ให้อัตโนมัติ (ถ้าต้องการ)
+  timestamps: true,
+  toJSON: {
+   virtuals: true,
+   versionKey: false,
+   transform: function (doc, ret) {
+    ret.objectId = ret._id.toString()
+    delete ret._id // ลบ _id ตัวเก่าออก (เพราะระบบจะสร้าง id ให้จาก virtuals แล้ว)
+   },
+  },
+  toObject: {
+   virtuals: true,
+   versionKey: false,
+  },
  },
 )
 

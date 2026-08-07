@@ -1,7 +1,8 @@
 'use client'
 
+import { fetchDashboardData } from '@/apis/api'
 import { useTranslationsNext } from '@/i18n/use-translate-next'
-import { fetchDashboardData } from '@/lib/api'
+// import { fetchDashboardData } from '@/lib/api'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
 import {
  Box,

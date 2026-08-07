@@ -7,6 +7,7 @@ import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 import {
  Box,
+ Drawer,
  List,
  ListItemButton,
  ListItemIcon,
@@ -16,36 +17,40 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+const DRAWER_WIDTH = 280
+
 const navIcons = {
  dashboard: <DashboardRoundedIcon fontSize='small' />,
- personnel: <PeopleAltRoundedIcon fontSize='small' />,
+ official: <PeopleAltRoundedIcon fontSize='small' />,
  reports: <DescriptionRoundedIcon fontSize='small' />,
  settings: <SettingsRoundedIcon fontSize='small' />,
 }
 
 type SidebarProps = {
  locale: string
+ mobileOpen: boolean
+ onClose: () => void
 }
 
-export function Sidebar({ locale }: SidebarProps) {
+export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
  const t = useTranslationsNext('navBar')
  const x = useTranslationsNext('sidebar')
  const pathname = usePathname()
 
  const menuItems = [
   { key: 'dashboard', href: `/${locale}/dashboard` },
-  { key: 'personnel', href: `/${locale}/personnel` },
+  { key: 'official', href: `/${locale}/official` },
   { key: 'reports', href: `/${locale}/reports` },
   { key: 'settings', href: `/${locale}/settings` },
  ]
 
- return (
+ // แยกเนื้อหาเมนูออกมาเพื่อให้เรียกใช้ซ้ำได้ทั้ง 2 โหมด (มือถือ/เดสก์ท็อป)
+ const drawerContent = (
   <Box
    sx={{
-    width: 280,
-    minHeight: '100vh',
     backgroundColor: '#1E2235',
     color: '#fff',
+    height: '100%',
     px: 2,
     py: 3,
    }}
@@ -64,6 +69,7 @@ export function Sidebar({ locale }: SidebarProps) {
        key={item.key}
        component={Link}
        href={item.href}
+       onClick={onClose} // กดแล้วปิดเมนูอัตโนมัติบนมือถือ
        sx={{
         borderRadius: 2,
         mb: 1,
@@ -82,6 +88,47 @@ export function Sidebar({ locale }: SidebarProps) {
      )
     })}
    </List>
+  </Box>
+ )
+
+ return (
+  <Box
+   component='nav'
+   sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+  >
+   {/* 📱 โหมดมือถือ: ซ่อนเมนูไว้ และแสดงเมื่อ mobileOpen = true */}
+   <Drawer
+    variant='temporary'
+    open={mobileOpen}
+    onClose={onClose}
+    ModalProps={{ keepMounted: true }} // ช่วยลดปัญหา Performance บนมือถือ
+    sx={{
+     display: { xs: 'block', md: 'none' },
+     '& .MuiDrawer-paper': {
+      boxSizing: 'border-box',
+      width: DRAWER_WIDTH,
+      borderRight: 'none',
+     },
+    }}
+   >
+    {drawerContent}
+   </Drawer>
+
+   {/* 💻 โหมดเดสก์ท็อป: แสดงเมนูค้างไว้เสมอ */}
+   <Drawer
+    variant='permanent'
+    sx={{
+     display: { xs: 'none', md: 'block' },
+     '& .MuiDrawer-paper': {
+      boxSizing: 'border-box',
+      width: DRAWER_WIDTH,
+      borderRight: 'none',
+     },
+    }}
+    open
+   >
+    {drawerContent}
+   </Drawer>
   </Box>
  )
 }

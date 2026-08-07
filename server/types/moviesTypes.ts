@@ -1,6 +1,7 @@
 import { BaseResponseType } from './baseType'
 
 export type MoviesType = {
+ objectId: string
  plot?: string
  genres?: string[]
  runtime?: number

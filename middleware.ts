@@ -1,12 +1,37 @@
 import createMiddleware from 'next-intl/middleware'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { routing } from './src/i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
+// กำหนดหน้าเว็บที่ต้อง Login ก่อนเข้าใช้งาน (Private Routes)
+const protectedRoutes = ['/dashboard', '/personnel', '/reports', '/settings']
+
 export default function middleware(req: NextRequest) {
- // วางกับดักที่ 1: ดูว่า Middleware ทำงานไหม
- console.log('🚀 Middleware Hit:', req.nextUrl.pathname)
+ const { pathname } = req.nextUrl
+
+ // 1. ตรวจสอบ Token จาก Cookie
+ const token = req.cookies.get('token')?.value
+
+ // 2. ดึง locale ปัจจุบันจาก path (เช่น /th/dashboard -> 'th')
+ const pathnameLocale = routing.locales.find(
+  (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
+ )
+ const currentLocale = pathnameLocale || routing.defaultLocale
+
+ // 3. ตัด prefix ภาษาออก เพื่อเช็คว่า path ปัจจุบันเป็น Protected Route หรือไม่
+ const pathWithoutLocale =
+  pathname.replace(new RegExp(`^/(${routing.locales.join('|')})`), '') || '/'
+ const isProtectedRoute = protectedRoutes.some((route) =>
+  pathWithoutLocale.startsWith(route),
+ )
+
+ // 4. ถ้าเป็นหน้า Protected แล้วไม่มี Token -> Redirect ไปหน้า Login
+ if (isProtectedRoute && !token) {
+  const loginUrl = new URL(`/${currentLocale}/login`, req.url)
+  return NextResponse.redirect(loginUrl)
+ }
+
  return intlMiddleware(req)
 }
 

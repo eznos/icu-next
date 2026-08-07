@@ -4,12 +4,21 @@
   "online": "Online"
  },
 
+ "common": {
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "add": "Add"
+ },
+
  "sidebar": {
   "dashboard": "Dashboard",
-  "personnel": "Personnel",
+  "official": "Official",
   "reports": "Reports",
   "settings": "Settings"
  },
+
  "dashboard": {
   "title": "Dashboard",
   "warningTitle": "Alert / Warning",
@@ -26,10 +35,32 @@
   "register": "Register Patient",
   "chartTitle": "Monthly ICU Statistics"
  },
+
  "login": {
   "title": "Sign in",
   "username": "Username",
   "password": "Password",
   "submit": "Login"
+ },
+
+ "official": {
+  "title": "Official Information",
+  "subTitle": "Control competency levels and receive license expiry alerts 90 days in advance",
+  "fullName": "Full Name",
+  "email": "Email",
+  "age": "Age",
+  "gender": "Gender",
+  "position": "Position",
+  "competencyLevel": "Competency Level",
+  "licenseNumber": "License Number",
+  "licenseExpiryDate": "License Expiry Date",
+  "phone": "Phone Number",
+  "evidence": "Professional License Evidence",
+  "uploadEvidence": "Upload PDF Evidence of Professional License",
+  "singleFileNotice": "To support Single-File operation, the document will be automatically saved in a simulated manner within the application",
+  "addOfficialInfo": "Add Official Information",
+  "saveOfficialInfo": "Save Official Information",
+  "titleModal": "Add Official Information",
+  "titleModalEdit": "Edit Official Information"
  }
 }
