@@ -1,6 +1,6 @@
 import createMiddleware from 'next-intl/middleware'
 import { NextRequest, NextResponse } from 'next/server'
-import { routing } from './src/i18n/routing'
+import { routing } from './i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -30,6 +30,13 @@ export default function middleware(req: NextRequest) {
  if (isProtectedRoute && !token) {
   const loginUrl = new URL(`/${currentLocale}/login`, req.url)
   return NextResponse.redirect(loginUrl)
+ }
+
+ // 🌟 5. (เพิ่มใหม่) ถ้ามี Token แล้ว แต่พยายามเข้าหน้า Login -> Redirect ไป Dashboard
+ const isLoginRoute = pathWithoutLocale.startsWith('/login')
+ if (isLoginRoute && token) {
+  const dashboardUrl = new URL(`/${currentLocale}/dashboard`, req.url)
+  return NextResponse.redirect(dashboardUrl)
  }
 
  return intlMiddleware(req)

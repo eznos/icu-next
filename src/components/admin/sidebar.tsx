@@ -48,8 +48,8 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
  const drawerContent = (
   <Box
    sx={{
-    backgroundColor: '#1E2235',
-    color: '#fff',
+    backgroundColor: (e) => e.palette.background.paper,
+    // color: () => '#fff',
     height: '100%',
     px: 2,
     py: 3,
@@ -74,13 +74,13 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
         borderRadius: 2,
         mb: 1,
         bgcolor: active ? '#14B8A6' : 'transparent',
-        color: '#fff',
+        color: (e) => (active ? '#fff' : e.palette.text.primary),
         '&:hover': {
          bgcolor: active ? '#14B8A6' : 'rgba(255,255,255,0.08)',
         },
        }}
       >
-       <ListItemIcon sx={{ color: '#fff', minWidth: 36 }}>
+       <ListItemIcon sx={{ minWidth: 36 }}>
         {navIcons[item.key as keyof typeof navIcons]}
        </ListItemIcon>
        <ListItemText primary={x(item.key as keyof typeof navIcons)} />

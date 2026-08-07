@@ -5,10 +5,11 @@ import { useTranslationsNext } from '@/i18n/use-translate-next'
 import { Logout } from '@mui/icons-material'
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-
 export function HeaderBar() {
  const t = useTranslationsNext('navBar')
+ const router = useRouter()
  const [now, setNow] = useState(new Date())
  const [isMounted, setIsMounted] = useState(false)
 
@@ -22,10 +23,18 @@ export function HeaderBar() {
   return () => clearInterval(timer)
  }, [])
 
+ const logout = () => {
+  // ลบ Token จาก Cookie
+  document.cookie = 'token=; path=/; max-age=0;'
+
+  router.push('/th/login') // 🌟 6. พาผู้ใช้ไปยังหน้า Login
+  router.refresh()
+ }
+
  return (
   <Box
    sx={{
-    backgroundColor: '#fff',
+    backgroundColor: (t) => t.palette.background.paper,
     borderBottom: '1px solid',
     borderColor: 'divider',
     px: { xs: 2, md: 3 }, // 🌟 1. ลด Padding ด้านข้างเมื่ออยู่บนหน้าจอมือถือ (xs)
@@ -62,7 +71,7 @@ export function HeaderBar() {
 
     <ThemeModeSwitch />
 
-    <IconButton edge='end'>
+    <IconButton edge='end' onClick={logout}>
      {' '}
      {/* 🌟 4. ดัน IconButton ให้ชิดขอบพอดี */}
      <Logout />

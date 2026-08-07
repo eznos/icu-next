@@ -22,7 +22,13 @@ export default function AdminLayout({
  }
 
  return (
-  <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#F3F4F6' }}>
+  <Box
+   sx={{
+    display: 'flex',
+    minHeight: '100vh',
+    backgroundColor: (e) => e.palette.background.default,
+   }}
+  >
    <Sidebar
     locale={locale || 'th'}
     mobileOpen={mobileOpen}
@@ -42,8 +48,8 @@ export default function AdminLayout({
      sx={{
       display: 'flex',
       alignItems: 'center',
-      backgroundColor: '#fff',
-      borderBottom: '1px solid #e0e0e0',
+      backgroundColor: (e) => e.palette.background.paper,
+      borderBottom: (e) => `1px solid ${e.palette.divider}`,
      }}
     >
      <IconButton
@@ -60,7 +66,15 @@ export default function AdminLayout({
      </Box>
     </Box>
 
-    <Box component='main' sx={{ p: 3, flexGrow: 1 }}>
+    <Box
+     component='main'
+     sx={{
+      p: 3,
+      flexGrow: 1,
+      maxHeight: 'calc(100vh - 64px)',
+      overflowY: 'auto',
+     }}
+    >
      {children}
     </Box>
    </Box>

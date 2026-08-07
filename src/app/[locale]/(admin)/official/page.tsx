@@ -3,8 +3,8 @@
 import { fetchMovieListList } from '@/apis/movies/api'
 import { TableList } from '@/components/utils/tableList'
 import { Box, CircularProgress, Typography } from '@mui/material'
+import type { MoviesType } from '@server/types'
 import useSWR from 'swr'
-import { MoviesType } from '../../../../../server/types'
 
 export default function OfficialPage() {
  // 🌟 ดึง isLoading และ error ออกมาใช้ด้วย
@@ -34,7 +34,7 @@ export default function OfficialPage() {
    </Typography>
 
    <TableList<MoviesType>
-    rowKey='title'
+    rowKey='objectId'
     columns={[
      { key: 'id', label: 'ID', width: 60, renderCell: (row) => row.objectId },
      { key: 'title', label: 'Title', width: 200 },
@@ -46,13 +46,17 @@ export default function OfficialPage() {
      },
     ]}
     rows={data?.data || []}
-    pageSize={data?.pagination?.limit}
+    pageSize={20}
     loading={isLoading}
-    // totalItems={data?.pagination?.totalItems}
+    tableContainerProps={{
+     sx: {
+      maxHeight: 'calc(100vh - 300px)',
+      overflowY: 'auto',
+     },
+    }}
+    searchPlaceholder='Search users...'
+    onRowClick={(row) => console.log('Clicked:', row)}
    />
-
-   {/* ตัวอย่างการนำ data มาแสดงผล (สมมติว่าเป็น Array) */}
-   {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
   </Box>
  )
 }
