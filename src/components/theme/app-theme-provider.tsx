@@ -7,7 +7,7 @@ import {
  ThemeOptions,
 } from '@mui/material'
 import type { ReactNode } from 'react'
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 
 type ThemeMode = 'light' | 'dark'
 
@@ -34,6 +34,17 @@ const commonOptions: ThemeOptions = {
  },
 }
 
+const componentsOverrides: ThemeOptions['components'] = {
+ MuiCssBaseline: {
+  styleOverrides: {
+   body: {
+    // keep theme toggle smooth but avoid a long flash
+    transition: 'background-color 0.25s ease-in-out, color 0.25s ease-in-out',
+   },
+  },
+ },
+}
+
 // 🌟 2. Schema สำหรับ Light Mode โดยเฉพาะ
 const lightModeSchema: ThemeOptions = {
  ...commonOptions,
@@ -46,6 +57,7 @@ const lightModeSchema: ThemeOptions = {
   divider: '#E2E8F0',
  },
  components: {
+  ...componentsOverrides,
   MuiCard: {
    styleOverrides: {
     root: {
@@ -138,6 +150,7 @@ const darkModeSchema: ThemeOptions = {
   divider: '#334155',
  },
  components: {
+  ...componentsOverrides,
   MuiCard: {
    styleOverrides: {
     root: {
@@ -191,24 +204,20 @@ const darkModeSchema: ThemeOptions = {
  },
 }
 
-export function AppThemeProvider({ children }: { children: ReactNode }) {
- const [mode, setMode] = useState<ThemeMode>('light')
- const [mounted, setMounted] = useState(false)
-
- useEffect(() => {
-  setMounted(true)
-  const storedMode = window.localStorage.getItem(
-   'theme-mode',
-  ) as ThemeMode | null
-  if (storedMode) {
-   setMode(storedMode)
-  }
- }, [])
+export function AppThemeProvider({
+ children,
+ initialMode,
+}: {
+ children: ReactNode
+ initialMode?: ThemeMode
+}) {
+ const [mode, setMode] = useState<ThemeMode>(initialMode ?? 'light')
 
  const toggleMode = () => {
   setMode((currentMode) => {
    const nextMode = currentMode === 'light' ? 'dark' : 'light'
    window.localStorage.setItem('theme-mode', nextMode)
+   document.cookie = `theme-mode=${nextMode}; path=/; max-age=31536000; SameSite=Lax`
    return nextMode
   })
  }
@@ -220,10 +229,6 @@ export function AppThemeProvider({ children }: { children: ReactNode }) {
  )
 
  const value = useMemo(() => ({ mode, toggleMode }), [mode])
-
- if (!mounted) {
-  return null
- }
 
  return (
   <ThemeModeContext.Provider value={value}>
