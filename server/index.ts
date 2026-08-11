@@ -1,37 +1,21 @@
 import { cors } from '@elysiajs/cors'
 import { swagger } from '@elysiajs/swagger'
 import { Elysia } from 'elysia'
+import { authSetup } from './auth.setup'
 import { connectDB } from './db'
 import { dashboardRoutes } from './routes/dashboard.route'
 import { movieRoutes } from './routes/movie.route'
 import { patientRoutes } from './routes/patient.route'
+import { userRoutes } from './routes/user.route'
 
-export type DashboardResponse = {
- summary: {
-  totalPersonnel: number
-  activePatients: number
-  availableBeds: number
-  pendingAdmissions: number
- }
- beds: Array<{
-  id: string
-  status: 'Available' | 'Occupied'
-  patientName: string
-  hn: string
- }>
- monthlyAdmissions: number[]
-}
-
-// 🌟 1. ให้ต่อ DB เฉพาะเมื่อไม่ใช่ช่วง Phase การ Build ของ Vercel
 if (process.env.MONGODB_URI) {
  connectDB()
 }
 
-// 🌟 2. ประกาศและ Export app โดยไม่มี .listen() ต่อท้ายใน Chain
 export const app = new Elysia({ prefix: '/api' })
  .use(
   swagger({
-   provider: 'scalar', // หรือ 'scalar'
+   provider: 'scalar',
    path: '/swagger',
    documentation: {
     info: {
@@ -41,6 +25,7 @@ export const app = new Elysia({ prefix: '/api' })
    },
   }),
  )
+ .use(authSetup)
  .use(
   cors({
    origin: [
@@ -49,12 +34,13 @@ export const app = new Elysia({ prefix: '/api' })
    ],
   }),
  )
+
  .get('/health', () => ({ status: 'ok' }))
  .use(dashboardRoutes)
  .use(patientRoutes)
  .use(movieRoutes)
+ .use(userRoutes) // 🌟 2. เรียกใช้งาน userRoutes ต่อท้ายตรงนี้
 
-// 🌟 3. สั่ง .listen() เฉพาะตอนรัน Local ด้วย Bun เท่านั้น (ลบ .listen(3001) และ console.log ตัวเดิมออก)
 if (
  process.env.NODE_ENV !== 'production' &&
  typeof process.versions === 'object' &&

@@ -4,6 +4,12 @@
   "online": "Online"
  },
 
+ "language": {
+  "th": "Thai",
+  "en": "English",
+  "changeLanguage": "Change Language"
+ },
+
  "common": {
   "save": "Save",
   "cancel": "Cancel",
@@ -40,7 +46,20 @@
   "title": "Sign in",
   "username": "Username",
   "password": "Password",
-  "submit": "Login"
+  "submit": "Login",
+  "menu": {
+   "forgotPassword": "Forgot Password?",
+   "register": "Register"
+  }
+ },
+ "register": {
+  "title": "Register",
+  "username": "Username",
+  "password": "Password",
+  "email": "Email",
+  "confirmPassword": "Confirm Password",
+  "confirmPasswordError": "Passwords do not match",
+  "submit": "Register"
  },
 
  "official": {

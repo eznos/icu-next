@@ -43,7 +43,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
   { key: 'reports', href: `/${locale}/reports` },
   { key: 'settings', href: `/${locale}/settings` },
  ]
-
+ //  console.log(pathname)
  // แยกเนื้อหาเมนูออกมาเพื่อให้เรียกใช้ซ้ำได้ทั้ง 2 โหมด (มือถือ/เดสก์ท็อป)
  const drawerContent = (
   <Box
@@ -56,13 +56,14 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
    }}
   >
    <Box sx={{ px: 1.5, pb: 3 }}>
-    <Typography variant='h6' fontWeight={700}>
+    <Typography variant='h6' sx={{ fontWeight: 700 }}>
      {t('brand')}
     </Typography>
    </Box>
 
    <List disablePadding>
     {menuItems.map((item) => {
+     //  console.log(pathname === item.href, pathname, item.href, locale)
      const active = pathname === item.href
      return (
       <ListItemButton

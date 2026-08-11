@@ -8,3 +8,10 @@ export type BaseResponseType<T> = {
  }
  statusCode: number
 }
+
+export type ResponseTypeBasic<T> = {
+ error?: string
+ message: string
+ statusCode: number
+ data?: T
+}

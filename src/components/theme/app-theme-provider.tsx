@@ -71,6 +71,58 @@ const lightModeSchema: ThemeOptions = {
     },
    },
   },
+  MuiButton: {
+   styleOverrides: {
+    root: {
+     borderRadius: 10,
+     //  variant: 'contained',
+     variants: [
+      {
+       props: { variant: 'outlined' },
+       style: {
+        borderWidth: '3px',
+       },
+      },
+      {
+       props: { variant: 'contained' },
+       style: {
+        borderWidth: '3px',
+        borderRadius: 10,
+        backgroundColor: '#14B8A6',
+        color: '#FFFFFF',
+       },
+      },
+     ],
+    },
+   },
+  },
+  // MuiInputBase: {
+  //  styleOverrides: {
+  //   root: {
+  //    //  borderRadius: 8,
+  //    props: { variant: 'outlined' },
+  //    style: {
+  //     input: {
+  //      style: {
+  //       borderRadius: 10,
+  //      },
+  //      borderRadius: 8,
+  //     },
+  //    },
+  //   },
+  //  },
+  // },
+
+  // 🌟 จัดการกับตัวช่องกรอกข้อมูล (ตัวหนังสือ, ช่องว่างด้านใน)
+  MuiInputBase: {
+   styleOverrides: {
+    input: {
+     // ไม่ต้องใส่ borderRadius ตรงนี้ เพราะเส้นกรอบมันอยู่ที่ตัวครอบด้านบน
+     // แต่สามารถปรับพวก padding หรือ font ได้ที่นี่
+     // padding: '12px 14px',
+    },
+   },
+  },
  },
 }
 
@@ -108,6 +160,31 @@ const darkModeSchema: ThemeOptions = {
     head: {
      fontWeight: 600,
      backgroundColor: '#1E293B',
+    },
+   },
+  },
+  MuiButton: {
+   styleOverrides: {
+    root: {
+     borderRadius: '4px',
+     variants: [
+      {
+       props: { variant: 'outlined' },
+       style: {
+        borderWidth: '3px',
+        borderRadius: '4px',
+       },
+      },
+      {
+       props: { variant: 'contained' },
+       style: {
+        borderWidth: '3px',
+        borderRadius: '4px',
+        backgroundColor: '#14B8A6',
+        color: '#FFFFFF',
+       },
+      },
+     ],
     },
    },
   },

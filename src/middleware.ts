@@ -5,7 +5,7 @@ import { routing } from './i18n/routing'
 const intlMiddleware = createMiddleware(routing)
 
 // กำหนดหน้าเว็บที่ต้อง Login ก่อนเข้าใช้งาน (Private Routes)
-const protectedRoutes = ['/dashboard', '/personnel', '/reports', '/settings']
+const protectedRoutes = ['/dashboard', '/official', '/reports', '/settings']
 
 export default function middleware(req: NextRequest) {
  const { pathname } = req.nextUrl

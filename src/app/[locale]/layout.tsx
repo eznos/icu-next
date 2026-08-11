@@ -1,7 +1,7 @@
 // src/app/[locale]/layout.tsx
 import { NextIntlClientProvider } from 'next-intl'
 // 1. นำเข้า setRequestLocale เพิ่มเติม
-
+import { SnackbarProvider } from '@/components/providers/snackbar-provider'
 import { AppThemeProvider } from '@/components/theme/app-theme-provider'
 import { routing } from '@/i18n/routing'
 import { getMessages, setRequestLocale } from 'next-intl/server'
@@ -30,7 +30,9 @@ export default async function LocaleLayout({
   <html lang={locale}>
    <body>
     <NextIntlClientProvider locale={locale} messages={messages}>
-     <AppThemeProvider>{children}</AppThemeProvider>
+     <SnackbarProvider>
+      <AppThemeProvider>{children}</AppThemeProvider>
+     </SnackbarProvider>
     </NextIntlClientProvider>
    </body>
   </html>

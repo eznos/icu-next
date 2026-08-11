@@ -2,13 +2,15 @@
 
 import { fetchMovieListList } from '@/apis/movies/api'
 import { TableList } from '@/components/utils/tableList'
-import { Box, CircularProgress, Typography } from '@mui/material'
+import { TitlePage } from '@/components/utils/titlePage'
+import { useDialog } from '@/hooks/useDialog'
+import PersonAddIcon from '@mui/icons-material/PersonAdd'
+import { Box, Button, CircularProgress, Typography } from '@mui/material'
 import type { MoviesType } from '@server/types'
 import useSWR from 'swr'
-
 export default function OfficialPage() {
- // 🌟 ดึง isLoading และ error ออกมาใช้ด้วย
  const { data, isLoading, error } = useSWR('movies', fetchMovieListList)
+ const { open, openDialog } = useDialog()
 
  // 1. จัดการกรณีดึงข้อมูลล้มเหลว
  if (error) {
@@ -29,9 +31,14 @@ export default function OfficialPage() {
 
  return (
   <Box sx={{}}>
-   <Typography variant='h5' gutterBottom>
-    Official
-   </Typography>
+   <TitlePage
+    title='Official'
+    actions={
+     <Button variant='contained' startIcon={<PersonAddIcon />}>
+      ลงทะเบียนบุคลากร
+     </Button>
+    }
+   />
 
    <TableList<MoviesType>
     rowKey='objectId'

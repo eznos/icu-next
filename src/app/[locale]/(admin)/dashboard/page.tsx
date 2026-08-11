@@ -30,15 +30,15 @@ export default function DashboardPage() {
 
  return (
   <Stack spacing={3}>
-   <Typography variant='h5' fontWeight={700}>
+   <Typography variant='h5' sx={{ fontWeight: 700 }}>
     {t('title')}
    </Typography>
 
    <Card sx={{ border: '1px solid #EF4444' }}>
     <CardContent>
-     <Stack direction='row' spacing={1} alignItems='center' mb={1}>
+     <Stack direction='row' spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
       <WarningAmberRoundedIcon sx={{ color: '#EF4444' }} />
-      <Typography variant='h6' color='#B91C1C' fontWeight={700}>
+      <Typography variant='h6' color='#B91C1C' sx={{ fontWeight: 700 }}>
        {t('warningTitle')}
       </Typography>
      </Stack>
@@ -54,13 +54,23 @@ export default function DashboardPage() {
 
    <Grid container spacing={2}>
     {summaryKeys.map((key) => (
-     <Grid key={key} item xs={12} sm={6} lg={3}>
-      <Card>
+     <Grid
+      key={key}
+      size={{
+       xs: 12,
+       md: 6,
+       lg: 3,
+      }}
+      sx={{
+       width: '100%',
+      }}
+     >
+      <Card variant='outlined'>
        <CardContent>
         <Typography variant='body2' color='text.secondary'>
          {t(key)}
         </Typography>
-        <Typography variant='h4' fontWeight={700}>
+        <Typography variant='h4' sx={{ fontWeight: 700 }}>
          {data?.summary[key] ?? '-'}
         </Typography>
        </CardContent>
@@ -71,21 +81,26 @@ export default function DashboardPage() {
 
    <Card>
     <CardContent>
-     <Typography variant='h6' fontWeight={700} mb={2}>
+     <Typography variant='h6' sx={{ fontWeight: 700, mb: 2 }}>
       {t('bedMapping')}
      </Typography>
      <Grid container spacing={2}>
       {data?.beds.map((bed) => (
-       <Grid key={bed.id} item xs={12} md={6} lg={4}>
+       <Grid
+        key={bed.id}
+        size={{
+         xs: 12,
+         md: 6,
+         lg: 3,
+        }}
+       >
         <Card variant='outlined'>
          <CardContent>
           <Stack
            direction='row'
-           justifyContent='space-between'
-           alignItems='center'
-           mb={1}
+           sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
           >
-           <Typography variant='subtitle1' fontWeight={700}>
+           <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
             {bed.id}
            </Typography>
            <Chip
@@ -95,12 +110,13 @@ export default function DashboardPage() {
            />
           </Stack>
           <Typography variant='body2'>Patient: {bed.patientName}</Typography>
-          <Typography variant='body2' mb={2}>
+          <Typography variant='body2' sx={{ mb: 2 }}>
            HN: {bed.hn}
           </Typography>
           <Button
            variant='contained'
            fullWidth
+           sx={{ mt: 1 }}
            disabled={bed.status === 'Occupied'}
           >
            {t('register')}
@@ -115,7 +131,7 @@ export default function DashboardPage() {
 
    <Card>
     <CardContent>
-     <Typography variant='h6' fontWeight={700} mb={2}>
+     <Typography variant='h6' sx={{ fontWeight: 700, mb: 2 }}>
       {t('chartTitle')}
      </Typography>
      <Box
@@ -131,7 +147,11 @@ export default function DashboardPage() {
           minHeight: 16,
          }}
         />
-        <Typography align='center' variant='caption' mt={0.5} display='block'>
+        <Typography
+         align='center'
+         variant='caption'
+         sx={{ mt: 0.5, display: 'block' }}
+        >
          M{index + 1}
         </Typography>
        </Box>

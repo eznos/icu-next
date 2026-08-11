@@ -4,23 +4,19 @@ import { HeaderBar } from '@/components/admin/header'
 import { Sidebar } from '@/components/admin/sidebar'
 import MenuIcon from '@mui/icons-material/Menu'
 import { Box, IconButton } from '@mui/material'
+import { useParams } from 'next/navigation'
 import { useState, type ReactNode } from 'react'
 
 type ResponsiveAdminLayoutProps = {
  children: ReactNode
- locale?: string
 }
 
-export default function AdminLayout({
- children,
- locale,
-}: ResponsiveAdminLayoutProps) {
+export default function AdminLayout({ children }: ResponsiveAdminLayoutProps) {
  const [mobileOpen, setMobileOpen] = useState(false)
-
+ const { locale } = useParams<{ locale: string }>()
  const handleDrawerToggle = () => {
   setMobileOpen(!mobileOpen)
  }
-
  return (
   <Box
    sx={{

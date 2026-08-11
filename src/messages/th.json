@@ -4,6 +4,11 @@
   "online": "ออนไลน์"
  },
 
+ "language": {
+  "th": "ไทย",
+  "en": "อังกฤษ",
+  "changeLanguage": "เปลี่ยนภาษา"
+ },
  "common": {
   "save": "บันทึก",
   "cancel": "ยกเลิก",
@@ -40,7 +45,21 @@
   "title": "เข้าสู่ระบบ",
   "username": "ชื่อผู้ใช้",
   "password": "รหัสผ่าน",
-  "submit": "เข้าสู่ระบบ"
+  "submit": "เข้าสู่ระบบ",
+  "menu": {
+   "forgotPassword": "ลืมรหัสผ่าน?",
+   "register": "ลงทะเบียน"
+  }
+ },
+
+ "register": {
+  "title": "ลงทะเบียน",
+  "username": "ชื่อผู้ใช้",
+  "password": "รหัสผ่าน",
+  "email": "อีเมล",
+  "confirmPassword": "ยืนยันรหัสผ่าน",
+  "confirmPasswordError": "รหัสผ่านไม่ตรงกัน",
+  "submit": "ลงทะเบียน"
  },
 
  "official": {

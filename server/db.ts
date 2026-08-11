@@ -4,7 +4,7 @@ import mongoose from 'mongoose'
 let isConnected = false
 export const connectDB = async () => {
  if (isConnected) {
-  return // ถ้าต่อแล้ว ไม่ต้องต่อซ้ำ
+  return
  }
 
  try {
@@ -13,6 +13,7 @@ export const connectDB = async () => {
 
   const db = await mongoose.connect(MONGODB_URI)
   isConnected = db.connections[0].readyState === 1
+
   console.log('✅ MongoDB Connected Successfully')
  } catch (error) {
   console.error('❌ MongoDB Connection Error:', error)
