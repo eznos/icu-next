@@ -2,6 +2,12 @@ import { Schema } from 'mongoose'
 
 export const OfficialSchema: Schema = new Schema(
  {
+  id: {
+   type: String,
+   required: [true, 'กรุณาระบุรหัสผู้ปฏิบัติการ'],
+   unique: true,
+   trim: true,
+  },
   fullName: {
    type: String,
    required: [true, 'กรุณาระบุชื่อจริง-นามสกุล'],

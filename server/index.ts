@@ -3,6 +3,7 @@ import { swagger } from '@elysiajs/swagger'
 import { Elysia } from 'elysia'
 import { authSetup } from './auth.setup'
 import { connectDB } from './db'
+import { officialRoutes } from './modules/official'
 import { dashboardRoutes } from './routes/dashboard.route'
 import { movieRoutes } from './routes/movie.route'
 import { patientRoutes } from './routes/patient.route'
@@ -39,7 +40,8 @@ export const app = new Elysia({ prefix: '/api' })
  .use(dashboardRoutes)
  .use(patientRoutes)
  .use(movieRoutes)
- .use(userRoutes) // 🌟 2. เรียกใช้งาน userRoutes ต่อท้ายตรงนี้
+ .use(userRoutes)
+ .use(officialRoutes)
 
 if (
  process.env.NODE_ENV !== 'production' &&

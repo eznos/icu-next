@@ -1,16 +1,22 @@
 'use client'
 
-import { fetchMovieListList } from '@/apis/movies/api'
-import { TableList } from '@/components/utils/tableList'
+import { useOfficialList } from '@/apis/officials/getOfficial'
+import { OfficialModal } from '@/components/admin/official'
+import { OfficialTableList } from '@/components/admin/official/officaiaTableList'
 import { TitlePage } from '@/components/utils/titlePage'
 import { useDialog } from '@/hooks/useDialog'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
-import type { MoviesType } from '@server/types'
-import useSWR from 'swr'
 export default function OfficialPage() {
- const { data, isLoading, error } = useSWR('movies', fetchMovieListList)
- const { open, openDialog } = useDialog()
+ const { open, openDialog, closeDialog, data: dialogData } = useDialog<any>()
+ const { data, isLoading, error } = useOfficialList({
+  arg: {
+   limit: 20,
+   page: 1,
+   sortBy: 'createdAt',
+   order: 'desc',
+  },
+ })
 
  // 1. จัดการกรณีดึงข้อมูลล้มเหลว
  if (error) {
@@ -30,40 +36,22 @@ export default function OfficialPage() {
  //  Column<MoviesType>
 
  return (
-  <Box sx={{}}>
+  <Box>
    <TitlePage
     title='Official'
     actions={
-     <Button variant='contained' startIcon={<PersonAddIcon />}>
+     <Button
+      onClick={openDialog}
+      variant='contained'
+      startIcon={<PersonAddIcon />}
+     >
       ลงทะเบียนบุคลากร
      </Button>
     }
    />
 
-   <TableList<MoviesType>
-    rowKey='objectId'
-    columns={[
-     { key: 'id', label: 'ID', width: 60, renderCell: (row) => row.objectId },
-     { key: 'title', label: 'Title', width: 200 },
-     {
-      key: 'releaseDate',
-      label: 'Release Date',
-      width: 150,
-      renderCell: (row) => row.awards?.wins,
-     },
-    ]}
-    rows={data?.data || []}
-    pageSize={20}
-    loading={isLoading}
-    tableContainerProps={{
-     sx: {
-      maxHeight: 'calc(100vh - 300px)',
-      overflowY: 'auto',
-     },
-    }}
-    searchPlaceholder='Search users...'
-    onRowClick={(row) => console.log('Clicked:', row)}
-   />
+   <OfficialTableList data={data?.data || []} isLoading={isLoading} />
+   <OfficialModal data={dialogData} open={open} onClose={closeDialog} />
   </Box>
  )
 }

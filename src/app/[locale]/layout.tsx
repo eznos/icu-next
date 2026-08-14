@@ -1,3 +1,4 @@
+// 'use client'
 // src/app/[locale]/layout.tsx
 import { NextIntlClientProvider } from 'next-intl'
 import { cookies } from 'next/headers'
@@ -35,9 +36,11 @@ export default async function LocaleLayout({
   <html lang={locale} suppressHydrationWarning>
    <body>
     <NextIntlClientProvider locale={locale} messages={messages}>
+     {/* <LocalizationProvider dateAdapter={AdapterDayjs}> */}
      <SnackbarProvider>
       <AppThemeProvider initialMode={themeMode}>{children}</AppThemeProvider>
      </SnackbarProvider>
+     {/* </LocalizationProvider> */}
     </NextIntlClientProvider>
    </body>
   </html>

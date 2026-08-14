@@ -12,7 +12,7 @@ import {
  Tooltip,
  Typography,
 } from '@mui/material'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 export function HeaderBar() {
  const t = useTranslationsNext('navBar')
@@ -92,9 +92,14 @@ export function HeaderBar() {
 const ButtonChangeLocale = () => {
  const t = useTranslationsNext('language')
  const router = useRouter()
- const currentPath = window.location.pathname
+
+ // 🌟 3. เปลี่ยนจาก window.location.pathname มาใช้ usePathname()
+ const currentPath = usePathname()
 
  const changeLocale = (newLocale: string) => {
+  // ดักไว้ก่อนเผื่อ currentPath ยังโหลดไม่เสร็จ
+  if (!currentPath) return
+
   const newPath = currentPath.replace(/^\/(th|en)/, `/${newLocale}`)
   router.push(newPath)
  }
@@ -103,7 +108,7 @@ const ButtonChangeLocale = () => {
   <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
    <Tooltip placement='auto' title={t('changeLanguage')}>
     <Button
-     onClick={() => changeLocale(currentPath.startsWith('/en') ? 'th' : 'en')}
+     onClick={() => changeLocale(currentPath?.startsWith('/en') ? 'th' : 'en')}
     >
      {t('en')}
     </Button>

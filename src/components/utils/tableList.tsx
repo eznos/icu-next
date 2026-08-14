@@ -124,6 +124,7 @@ type TableListProps<T extends Record<string, unknown>> = {
  /** Placeholder text for the search input field */
  searchPlaceholder?: string
  /** Message shown when table has no data. Default: 'No data available' */
+ searchKeys?: (keyof T)[]
  emptyMessage?: string
  /** Called when a row is clicked. Disabled if not provided. */
  onRowClick?: (row: T) => void
@@ -178,6 +179,7 @@ type UseTableListReturn<T extends Record<string, unknown>> = {
 function useTableList<T extends Record<string, unknown>>(
  rows: T[],
  columns: Column<T>[],
+ searchKeys?: (keyof T)[],
  pageSize: number = 10,
 ): UseTableListReturn<T> {
  // Search & Filter
@@ -209,10 +211,12 @@ function useTableList<T extends Record<string, unknown>>(
   if (search.trim()) {
    const searchLower = search.toLowerCase()
    result = result.filter((row) => {
-    return columns.some((col) => {
-     const value = row[col.key]
-     return String(value).toLowerCase().includes(searchLower)
-    })
+    return (
+     searchKeys?.some((key) => {
+      const value = row[key]
+      return String(value).toLowerCase().includes(searchLower)
+     }) ?? false
+    )
    })
   }
 
@@ -331,6 +335,7 @@ export function TableList<T extends Record<string, unknown>>({
  footer,
  title,
  hideSearch = false,
+ searchKeys = [],
 }: TableListProps<T>) {
  const theme = useTheme()
 
@@ -353,7 +358,7 @@ export function TableList<T extends Record<string, unknown>>({
   settingsAnchor,
   handleSettingsOpen,
   handleSettingsClose,
- } = useTableList(rows, columns, pageSize)
+ } = useTableList(rows, columns, searchKeys, pageSize)
 
  const settingsOpen = Boolean(settingsAnchor)
  const settingsId = settingsOpen ? 'column-settings-popover' : undefined
