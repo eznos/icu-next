@@ -1,17 +1,19 @@
 import { Column, TableList } from '@/components/utils'
 import { OfficialType } from '@/types'
-
+import { MdDelete, MdEdit } from 'react-icons/md'
 type OfficialTableListProps = {
  data?: OfficialType[]
  isLoading?: boolean
+ onRowClick?: (row: OfficialType, event: 'edit' | 'delete') => void
 }
 
 export const OfficialTableList = ({
  data,
  isLoading,
+ onRowClick,
 }: OfficialTableListProps) => {
  const columns: Column<OfficialType>[] = [
-  { key: 'id', label: 'ID', width: 60, renderCell: (row) => row.id },
+  { key: 'id', label: 'ID', width: 60, renderCell: (row) => row.objectUuId },
   {
    key: 'fullname',
    label: 'Name',
@@ -24,12 +26,31 @@ export const OfficialTableList = ({
    width: 150,
    renderCell: (row) => row.age,
   },
+  {
+   key: 'actions',
+   label: 'Actions',
+   width: 150,
+   renderCell: (row) => (
+    <div>
+     <MdEdit
+      size={18}
+      style={{ cursor: 'pointer', marginRight: '8px' }}
+      onClick={() => onRowClick?.(row, 'edit')}
+     />
+     <MdDelete
+      size={18}
+      style={{ cursor: 'pointer' }}
+      onClick={() => onRowClick?.(row, 'delete')}
+     />
+    </div>
+   ),
+  },
  ]
- //  console.log(data)
+
  return (
   <>
    <TableList<OfficialType>
-    rowKey='id'
+    rowKey='objectUuId'
     columns={columns}
     rows={data || []}
     pageSize={20}

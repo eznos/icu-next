@@ -1,4 +1,5 @@
 export type OfficialType = {
+ objectUuId: string
  fullName: string
  age: number
  gender: 'ชาย' | 'หญิง' | 'อื่นๆ'

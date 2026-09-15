@@ -12,6 +12,7 @@ import {
  Tooltip,
  Typography,
 } from '@mui/material'
+import dayjs from 'dayjs'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 export function HeaderBar() {
@@ -52,7 +53,21 @@ export function HeaderBar() {
    }}
   >
    <Stack direction='row' spacing={1} sx={{ alignItems: 'center' }}>
-    <CircleRoundedIcon sx={{ color: '#22C55E', fontSize: 14 }} />
+    <CircleRoundedIcon
+     sx={{
+      color: '#22C55E',
+      fontSize: 14,
+
+      animation: 'blink 1s infinite', // 🌟 กำหนดความเร็วการกระพริบ (1.5 วินาที)
+      '@keyframes blink': {
+       '0%': { opacity: 1 },
+       '25%': { opacity: 0.5 },
+       '50%': { opacity: 0.3 },
+       '75%': { opacity: 0.5 },
+       '100%': { opacity: 1 },
+      },
+     }}
+    />
     <Typography
      variant='body2'
      //  fontWeight={600}
@@ -74,7 +89,7 @@ export function HeaderBar() {
      color='text.secondary'
      sx={{ display: { xs: 'none', md: 'block' } }} // 🌟 3. ซ่อนเวลาบนหน้าจอมือถือ/แท็บเล็ต เพื่อป้องกันข้อความล้น
     >
-     {isMounted ? now.toLocaleString() : ''}
+     {isMounted ? dayjs(now).format('YYYY-MM-DD HH:mm:ss') : ''}
     </Typography>
     <ButtonChangeLocale />
     <ThemeModeSwitch />

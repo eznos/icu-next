@@ -5,6 +5,7 @@ import { OfficialModal } from '@/components/admin/official'
 import { OfficialTableList } from '@/components/admin/official/officaiaTableList'
 import { TitlePage } from '@/components/utils/titlePage'
 import { useDialog } from '@/hooks/useDialog'
+import { OfficialCreateType, OfficialType } from '@/types'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
 export default function OfficialPage() {
@@ -18,6 +19,14 @@ export default function OfficialPage() {
   },
  })
 
+ const handleRowClick = (row: OfficialCreateType, event: 'edit' | 'delete') => {
+  if (event === 'edit') {
+   openDialog(row)
+  } else if (event === 'delete') {
+   // Handle delete action here
+   console.log('Delete row:', row)
+  }
+ }
  // 1. จัดการกรณีดึงข้อมูลล้มเหลว
  if (error) {
   return <Typography color='error'>เกิดข้อผิดพลาดในการโหลดข้อมูล</Typography>
@@ -50,7 +59,11 @@ export default function OfficialPage() {
     }
    />
 
-   <OfficialTableList data={data?.data || []} isLoading={isLoading} />
+   <OfficialTableList
+    onRowClick={handleRowClick}
+    data={(data?.data as OfficialType[]) || []}
+    isLoading={isLoading}
+   />
    <OfficialModal data={dialogData} open={open} onClose={closeDialog} />
   </Box>
  )

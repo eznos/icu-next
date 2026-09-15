@@ -1,4 +1,5 @@
 'use client'
+import { useOfficialDetail } from '@/apis/officials/getOfficialDetail'
 import { useOfficialCreate } from '@/apis/officials/postOfficialCreate'
 import { useSnackBarNotification } from '@/hooks'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
@@ -15,6 +16,7 @@ import {
 } from '@mui/material'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { log } from 'console'
 import { useState } from 'react'
 import {
  FormContainer,
@@ -68,7 +70,9 @@ type OfficialModalProps = {
 
 export const OfficialModal = ({ open, onClose, data }: OfficialModalProps) => {
  const { mutate, isMutating } = useOfficialCreate()
+ const { data: detailData } = useOfficialDetail(data?.objectUuId)
  const { showSnackbar } = useSnackBarNotification()
+
  const form = useForm<any>()
  const [fileName, setFileName] = useState<string>('No file chosen')
 
@@ -81,7 +85,10 @@ export const OfficialModal = ({ open, onClose, data }: OfficialModalProps) => {
     handleClose()
    },
    onError: (error) => {
-    showSnackbar('เกิดข้อผิดพลาดในการลงทะเบียนบุคลากร', 'error')
+    showSnackbar(
+     error.message || 'เกิดข้อผิดพลาดในการลงทะเบียนบุคลากร',
+     'error',
+    )
     console.error('Error from API:', error)
    },
   })
@@ -97,7 +104,7 @@ export const OfficialModal = ({ open, onClose, data }: OfficialModalProps) => {
   setFileName('No file chosen')
   onClose()
  }
-
+ console.log('detailData', detailData, data?.objectUuId)
  return (
   <>
    <Dialog open={open} onClose={handleClose} maxWidth='lg' fullWidth>
@@ -213,7 +220,7 @@ export const OfficialModal = ({ open, onClose, data }: OfficialModalProps) => {
         >
          <Label>วันหมดอายุใบอนุญาตประกอบโรคฯ *</Label>
          <DatePickerElement
-          name='licenseExpiry'
+          name='licenseExpiryDate'
           format='DD/MM/YYYY'
           sx={{
            '& .MuiInputBase-root': {
@@ -232,7 +239,7 @@ export const OfficialModal = ({ open, onClose, data }: OfficialModalProps) => {
         >
          <Label>เบอร์โทรศัพท์เจ้าหน้าที่ *</Label>
          <TextFieldElement
-          name='phone'
+          name='phoneNumber'
           placeholder='0XX-XXXXXXX'
           fullWidth
           required

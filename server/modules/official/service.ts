@@ -1,10 +1,34 @@
-import { Official } from '@server/models/official.model'
+// import { OfficialModel } from './model'
+import crypto from 'crypto'
 import { status } from 'elysia'
+import mongoose, { Document, Schema } from 'mongoose'
 import { OfficialModel } from './model'
-// import { Official } from './model'
 
-// If a class doesn't need to store a property,
-// you can use an `abstract class` to avoid class allocation
+import { OfficialSchemaX } from './model'
+
+type xx = {
+ objectUuId: string
+ fullName: string
+ age: number
+ gender: 'ชาย' | 'หญิง' | 'อื่นๆ'
+ position: string
+ competencyLevel:
+  | 'Novice'
+  | 'Advanced Beginner'
+  | 'Competent'
+  | 'Proficient'
+  | 'Expert'
+ licenseNumber: string
+ licenseExpiryDate: Date
+ phoneNumber: string
+ licenseDocumentUrl: string // เก็บ URL ของไฟล์ PDF
+ createdAt: Date
+ updatedAt: Date
+}
+
+export interface IOfficial extends Document, xx {}
+const schema: Schema = OfficialSchemaX
+export const Official = mongoose.model<IOfficial>('official', schema)
 
 export abstract class officialService {
  static async createOfficial(body: OfficialModel) {
@@ -12,62 +36,102 @@ export abstract class officialService {
    const checkExistingOfficial = await Official.findOne({
     fullName: body.fullName,
    })
+   console.log('body', body)
+   // 1. Error ที่เราตั้งใจดัก (Business Logic)
    if (checkExistingOfficial) {
-    status(409) // Created
-
-    throw status(400, {
+    throw status(409, {
      error: 'Official with this name already exists',
-     message: 'Official with this name already exists',
+     message: 'มีชื่อเจ้าหน้าที่นี้ในระบบแล้ว',
      statusCode: 409,
     })
    }
-   const { id, ...dataToSave } = body
-   const newOfficial = new Official(dataToSave)
+
+   if (!body.fullName || !body.position) {
+    throw status(400, {
+     error: 'Missing required fields',
+     message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
+     statusCode: 400,
+    })
+   }
+
+   const objectUuId = crypto.randomUUID()
+   const { objectUuId: _clientObjectUuId, ...dataToSave } = body
+
+   // 2. บันทึกข้อมูล โดยปล่อยให้ MongoDB สร้าง _id (ObjectId) เอง
+   const newOfficial = new Official({
+    objectUuId,
+    ...dataToSave,
+   })
    await newOfficial.save()
-   status(200) // Created
+
    return {
     message: 'Official created successfully',
     statusCode: 200,
+    referenceId: objectUuId,
    }
   } catch (error: any) {
-   console.log('error', error)
-   if (error.statusCode) {
-    throw error
+   // 🌟 3. เช็คว่าถ้าเป็น Error ที่เราจงใจโยนเอง (มี statusCode) ให้โยนผ่านไปเลย
+   if (error.code === 409) {
+    throw status(409, {
+     error: 'Official with this name already exists',
+     message: 'มีชื่อเจ้าหน้าที่นี้ในระบบแล้ว',
+     statusCode: 409,
+    })
    }
-   throw status(400, {
-    error: error.message || 'Unknown Error',
-    message: 'Failed to create official',
-    statusCode: 400,
+
+   console.log('error', error)
+   throw status(500, {
+    error: error.message || 'Internal Server Error',
+    message: error.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูลลงฐานข้อมูล',
+    statusCode: 500,
    })
   }
  }
+
  static async getDetailOfficial({ id }: { id: string }) {
   try {
-   const checkExistingOfficial = await Official.findOne({
-    id: id,
-   })
+   const isObjectId = mongoose.Types.ObjectId.isValid(id)
+   const query = isObjectId
+    ? { $or: [{ objectUuId: id }, { _id: id }] }
+    : { objectUuId: id }
+
+   const checkExistingOfficial = await Official.findOne(query).lean()
    if (!checkExistingOfficial) {
-    throw status(404, {
+    return status(404, {
      error: 'Official not found',
      message: 'ไม่พบข้อมูลผู้ปฏิบัติการ',
      statusCode: 404,
     })
    }
-   status(200) // OK
+
+   const formattedOfficial = {
+    ...checkExistingOfficial,
+    _id: checkExistingOfficial._id?.toString(),
+    licenseExpiryDate: checkExistingOfficial.licenseExpiryDate
+     ? new Date(checkExistingOfficial.licenseExpiryDate).toISOString()
+     : undefined,
+    createdAt: checkExistingOfficial.createdAt
+     ? new Date(checkExistingOfficial.createdAt).toISOString()
+     : undefined,
+    updatedAt: checkExistingOfficial.updatedAt
+     ? new Date(checkExistingOfficial.updatedAt).toISOString()
+     : undefined,
+   }
+
    return {
-    data: checkExistingOfficial,
+    data: formattedOfficial,
     message: 'ดึงข้อมูลผู้ปฏิบัติการสำเร็จ',
     statusCode: 200,
    }
   } catch (error: any) {
-   status(400) // Bad Request
-   return {
-    error: error.message,
+   return status(500, {
+    error: error.message || 'Internal Server Error',
     message: 'ดึงข้อมูลผู้ปฏิบัติการไม่สำเร็จ',
-    statusCode: 400,
-   }
+    statusCode: 500,
+   })
   }
  }
+
  static async getOfficialList({
   query,
  }: {
@@ -102,10 +166,19 @@ export abstract class officialService {
 
    const totalItems = await Official.countDocuments(filterQuery)
 
-   // 🌟 1. แปลง _id จาก ObjectId ให้เป็น String ล้วนๆ เพื่อให้ตรงกับ TypeBox
+   // 🌟 1. แปลง _id และ Date ให้เป็น String เพื่อให้ผ่าน TypeBox Response Validation
    const formattedOfficials = officials.map((doc: any) => ({
     ...doc,
-    _id: doc._id.toString(),
+    _id: doc._id?.toString(),
+    licenseExpiryDate: doc.licenseExpiryDate
+     ? new Date(doc.licenseExpiryDate).toISOString()
+     : undefined,
+    createdAt: doc.createdAt
+     ? new Date(doc.createdAt).toISOString()
+     : undefined,
+    updatedAt: doc.updatedAt
+     ? new Date(doc.updatedAt).toISOString()
+     : undefined,
    }))
 
    // 🌟 2. ลบ status() ออก แล้ว return ค่ากลับไปตรงๆ
@@ -120,14 +193,14 @@ export abstract class officialService {
     statusCode: 200,
    }
   } catch (error: any) {
-   // 🌟 3. ลบ status() ออกเช่นกัน ส่งแค่ Response กลับไปให้ Route จัดการต่อ
-   return {
+   return status(400, {
     error: error.message,
     message: 'ดึงข้อมูลผู้ปฏิบัติการไม่สำเร็จ',
     statusCode: 400,
-   }
+   })
   }
  }
+
  static async updateOfficial({
   id,
   body,
@@ -136,56 +209,59 @@ export abstract class officialService {
   body: OfficialModel
  }) {
   try {
-   const checkExistingOfficial = await Official.findOne({
-    _id: id,
-   })
+   const isObjectId = mongoose.Types.ObjectId.isValid(id)
+   const query = isObjectId
+    ? { $or: [{ objectUuId: id }, { _id: id }] }
+    : { objectUuId: id }
+
+   const checkExistingOfficial = await Official.findOne(query)
    if (!checkExistingOfficial) {
-    throw status(404, {
+    return status(404, {
      error: 'Official not found',
      message: 'ไม่พบข้อมูลผู้ปฏิบัติการ',
      statusCode: 404,
     })
    }
-   await Official.updateOne({ _id: id }, body)
-   status(200) // OK
+   await Official.updateOne(query, body)
    return {
     message: 'อัปเดตข้อมูลผู้ปฏิบัติการสำเร็จ',
     statusCode: 200,
    }
   } catch (error: any) {
-   status(400) // Bad Request
-   return {
+   return status(400, {
     error: error.message,
     message: 'อัปเดตข้อมูลผู้ปฏิบัติการไม่สำเร็จ',
     statusCode: 400,
-   }
+   })
   }
  }
+
  static async deleteOfficial({ id }: { id: string }) {
   try {
-   const checkExistingOfficial = await Official.findOne({
-    _id: id,
-   })
+   const isObjectId = mongoose.Types.ObjectId.isValid(id)
+   const query = isObjectId
+    ? { $or: [{ objectUuId: id }, { _id: id }] }
+    : { objectUuId: id }
+
+   const checkExistingOfficial = await Official.findOne(query)
    if (!checkExistingOfficial) {
-    throw status(404, {
+    return status(404, {
      error: 'Official not found',
      message: 'ไม่พบข้อมูลผู้ปฏิบัติการ',
      statusCode: 404,
     })
    }
-   await Official.deleteOne({ _id: id })
-   status(200) // OK
+   await Official.deleteOne(query)
    return {
     message: 'ลบข้อมูลผู้ปฏิบัติการสำเร็จ',
     statusCode: 200,
    }
   } catch (error: any) {
-   status(400) // Bad Request
-   return {
+   return status(400, {
     error: error.message,
     message: 'ลบข้อมูลผู้ปฏิบัติการไม่สำเร็จ',
     statusCode: 400,
-   }
+   })
   }
  }
 }

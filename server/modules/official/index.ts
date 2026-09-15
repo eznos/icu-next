@@ -16,7 +16,7 @@ export const officialRoutes = new Elysia({ prefix: '/official' })
   {
    body: ResponseOfficialSchema.createBody,
 
-   Response: {
+   response: {
     200: ResponseOfficialSchema.response,
     409: ResponseOfficialSchema.response,
     400: ResponseOfficialSchema.response,
@@ -39,9 +39,10 @@ export const officialRoutes = new Elysia({ prefix: '/official' })
      default: '64f8e1c2b5a1c2d3e4f5g6h7',
     }),
    }),
-   Response: {
+   response: {
     200: ResponseOfficialSchema.getDetailResponse,
     404: ResponseOfficialSchema.response,
+    500: ResponseOfficialSchema.response,
    },
   },
  )
@@ -83,7 +84,7 @@ export const officialRoutes = new Elysia({ prefix: '/official' })
      }),
     ),
    }),
-   Response: {
+   response: {
     200: ResponseOfficialSchema.getListResponse,
     400: ResponseOfficialSchema.response,
    },

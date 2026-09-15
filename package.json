@@ -7,11 +7,15 @@
   "build": "next build",
   "build:api": "bun build server/index.ts --target=bun --outdir=dist",
   "build:all": "npm run build && npm run build:api",
+  "migrate:official-index": "bun server/scripts/migrate-official-index.ts",
   "start": "next start",
   "lint": "next lint",
   "typecheck": "next typegen && tsc --noEmit",
   "api": "bun --watch server/index.ts",
-  "dev:all": "concurrently \"npm run dev\" \"npm run api\""
+  "dev:all": "concurrently \"npm run dev\" \"npm run api\"",
+  "clear:fe": "rm -rf .next",
+  "clear:be": "rm -rf dist",
+  "clear:all": "npm run clear:fe && npm run clear:be"
  },
  "dependencies": {
   "@elysia/jwt": "^1.4.2",
@@ -35,6 +39,7 @@
   "react": "^18.3.1",
   "react-dom": "^18.3.1",
   "react-hook-form-mui": "^9.0.1",
+  "react-icons": "^5.7.0",
   "sharp": "^0.35.0",
   "swr": "^2.2.5"
  },
