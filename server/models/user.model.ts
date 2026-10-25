@@ -6,6 +6,7 @@ export interface IUser extends Document {
  passwordHash: string
  email: string
  role: 'user' | 'admin'
+ ward: string
 }
 
 const UserSchema = new Schema<IUser>(
@@ -14,6 +15,7 @@ const UserSchema = new Schema<IUser>(
   passwordHash: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  ward: { type: String, required: true, default: 'MICU3', trim: true },
  },
  { timestamps: true },
 )

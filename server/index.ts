@@ -4,9 +4,10 @@ import { Elysia } from 'elysia'
 import { authSetup } from './auth.setup'
 import { connectDB } from './db'
 import { officialRoutes } from './modules/official'
+import { patientRoutes } from './modules/patient'
+import { wardRoutes } from './modules/ward'
 import { dashboardRoutes } from './routes/dashboard.route'
 import { movieRoutes } from './routes/movie.route'
-import { patientRoutes } from './routes/patient.route'
 import { userRoutes } from './routes/user.route'
 
 if (process.env.MONGODB_URI) {
@@ -39,6 +40,7 @@ export const app = new Elysia({ prefix: '/api' })
  .get('/health', () => ({ status: 'ok' }))
  .use(dashboardRoutes)
  .use(patientRoutes)
+ .use(wardRoutes)
  .use(movieRoutes)
  .use(userRoutes)
  .use(officialRoutes)

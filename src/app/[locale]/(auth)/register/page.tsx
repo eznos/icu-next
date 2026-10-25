@@ -1,6 +1,7 @@
 'use client'
 
 import { useRegisterPost } from '@/apis/auth'
+import { useWardList } from '@/apis/ward'
 import { useSnackBarNotification } from '@/hooks'
 import { useTranslationsNext } from '@/i18n/use-translate-next'
 import VisibilityIcon from '@mui/icons-material/Visibility'
@@ -14,13 +15,14 @@ import {
  Typography,
 } from '@mui/material'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import { FormContainer, TextFieldElement, useForm } from 'react-hook-form-mui'
+import { useMemo, useState } from 'react'
+import { FormContainer, SelectElement, TextFieldElement, useForm } from 'react-hook-form-mui'
 
 type RegisterFormData = {
  username: string
  password: string
  email: string
+ ward: string
  confirmPassword: string
 }
 export default function RegisterPage() {
@@ -30,8 +32,31 @@ export default function RegisterPage() {
  const { showSnackbar } = useSnackBarNotification()
  const [showPassword, setShowPassword] = useState(false)
  const { mutate, isLoading } = useRegisterPost()
+ const { data: wardResponse, isLoading: isLoadingWards } = useWardList()
 
- const formContext = useForm<RegisterFormData>()
+ const wardOptions = useMemo(() => {
+  if (wardResponse?.data && wardResponse.data.length > 0) {
+   return wardResponse.data.map((w) => ({
+    id: w.code,
+    label: `${w.code} - ${w.name}`,
+   }))
+  }
+  return [
+   { id: 'MICU3', label: 'MICU3 - หอผู้ป่วยวิกฤตอายุรกรรม 3 (MICU 3)' },
+   { id: 'SICU', label: 'SICU - หอผู้ป่วยวิกฤตศัลยกรรม (SICU)' },
+   { id: 'CCU', label: 'CCU - หอผู้ป่วยวิกฤตโรคหัวใจ (CCU)' },
+  ]
+ }, [wardResponse])
+
+ const formContext = useForm<RegisterFormData>({
+  defaultValues: {
+   username: '',
+   email: '',
+   ward: 'MICU3',
+   password: '',
+   confirmPassword: '',
+  },
+ })
 
  const passwordWatch = formContext.watch('password')
 
@@ -40,6 +65,7 @@ export default function RegisterPage() {
    username: data.username,
    password: data.password,
    email: data.email,
+   ward: data.ward || 'MICU3',
    role: 'admin' as const,
   }
 
@@ -100,6 +126,14 @@ export default function RegisterPage() {
         fullWidth
         required
         disabled={isLoading}
+       />
+       <SelectElement
+        name='ward'
+        label={t('ward')}
+        options={wardOptions}
+        fullWidth
+        required
+        disabled={isLoading || isLoadingWards}
        />
        <TextFieldElement
         name='password'

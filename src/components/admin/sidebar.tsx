@@ -22,6 +22,7 @@ const DRAWER_WIDTH = 280
 const navIcons = {
  dashboard: <DashboardRoundedIcon fontSize='small' />,
  official: <PeopleAltRoundedIcon fontSize='small' />,
+ patients: <PeopleAltRoundedIcon fontSize='small' />,
  reports: <DescriptionRoundedIcon fontSize='small' />,
  settings: <SettingsRoundedIcon fontSize='small' />,
 }
@@ -40,6 +41,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
  const menuItems = [
   { key: 'dashboard', href: `/${locale}/dashboard` },
   { key: 'official', href: `/${locale}/official` },
+  { key: 'patients', href: `/${locale}/patients` },
   { key: 'reports', href: `/${locale}/reports` },
   { key: 'settings', href: `/${locale}/settings` },
  ]

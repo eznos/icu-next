@@ -81,6 +81,18 @@ export const OfficialSchema = t.Object({
    description: 'วันที่อัปเดตข้อมูลล่าสุด (ระบบสร้างให้อัตโนมัติ)',
   }),
  ),
+ isDeleted: t.Optional(
+  t.Boolean({
+   description: 'สถานะการลบข้อมูล (Soft Delete)',
+   default: false,
+  }),
+ ),
+ deletedAt: t.Optional(
+  t.String({
+   format: 'date-time',
+   description: 'วันที่ลบข้อมูล',
+  }),
+ ),
 })
 
 export const OfficialSchemaX: Schema = new Schema(
@@ -133,6 +145,15 @@ export const OfficialSchemaX: Schema = new Schema(
   licenseDocumentUrl: {
    type: String,
    required: [true, 'กรุณาอัปโหลดไฟล์ PDF หลักฐาน'],
+  },
+  isDeleted: {
+   type: Boolean,
+   default: false,
+   index: true,
+  },
+  deletedAt: {
+   type: Date,
+   default: null,
   },
  },
  {

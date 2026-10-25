@@ -1,0 +1,14 @@
+server/
+    ├── modules/
+    │   ├── auth/
+    │   │   ├── index.ts    # Elysia controller (routes)
+    │   │   ├── service.ts  # Business logic
+    │   │   └── model.ts    # DTOs, schemas, types
+    │   └── user/
+    │       ├── index.ts
+    │       ├── service.ts
+    │       └── model.ts
+    ├── utils/
+    │   └── logger/
+    │       └── index.ts
+    └── index.ts        

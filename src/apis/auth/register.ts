@@ -6,6 +6,7 @@ export type RegisterPayload = {
  email: string
  password: string
  role?: 'user' | 'admin'
+ ward?: string
 }
 
 async function RegisterPost(

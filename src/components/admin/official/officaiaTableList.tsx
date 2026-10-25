@@ -13,7 +13,7 @@ export const OfficialTableList = ({
  onRowClick,
 }: OfficialTableListProps) => {
  const columns: Column<OfficialType>[] = [
-  { key: 'id', label: 'ID', width: 60, renderCell: (row) => row.objectUuId },
+  { key: 'id', label: 'ID', width: 80, renderCell: (row) => row.objectUuId || (row as any)._id || '-' },
   {
    key: 'fullname',
    label: 'Name',
@@ -50,7 +50,7 @@ export const OfficialTableList = ({
  return (
   <>
    <TableList<OfficialType>
-    rowKey='objectUuId'
+    rowKey={(row) => row.objectUuId || (row as any)._id || row.fullName}
     columns={columns}
     rows={data || []}
     pageSize={20}

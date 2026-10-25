@@ -46,6 +46,54 @@ export const officialRoutes = new Elysia({ prefix: '/official' })
    },
   },
  )
+ .put(
+  '/:id',
+  async ({ params, body }) => {
+   const response = await officialService.updateOfficial({
+    id: params.id as string,
+    body: body as unknown as OfficialModel,
+   })
+
+   return response
+  },
+  {
+   params: t.Object({
+    id: t.String({
+     description: 'รหัสผู้ปฏิบัติการ',
+     default: '64f8e1c2b5a1c2d3e4f5g6h7',
+    }),
+   }),
+   body: ResponseOfficialSchema.editBody,
+   response: {
+    200: ResponseOfficialSchema.response,
+    400: ResponseOfficialSchema.response,
+    404: ResponseOfficialSchema.response,
+   },
+  },
+ )
+ .delete(
+  '/:id',
+  async ({ params }) => {
+   const response = await officialService.deleteOfficial({
+    id: params.id as string,
+   })
+
+   return response
+  },
+  {
+   params: t.Object({
+    id: t.String({
+     description: 'รหัสผู้ปฏิบัติการ',
+     default: '64f8e1c2b5a1c2d3e4f5g6h7',
+    }),
+   }),
+   response: {
+    200: ResponseOfficialSchema.response,
+    400: ResponseOfficialSchema.response,
+    404: ResponseOfficialSchema.response,
+   },
+  },
+ )
  .get(
   '/',
   // 1. ลบ Type ที่เขียนกำกับไว้ทิ้งได้เลย Elysia จะฉลาดพอที่จะรู้ Type จาก Schema ด้านล่าง

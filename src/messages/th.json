@@ -20,6 +20,7 @@
  "sidebar": {
   "dashboard": "แดชบอร์ด",
   "official": "บุคลากรทางการพยาบาล",
+  "patients": "ผู้ป่วย",
   "reports": "รายงาน",
   "settings": "ตั้งค่า"
  },
@@ -57,6 +58,7 @@
   "username": "ชื่อผู้ใช้",
   "password": "รหัสผ่าน",
   "email": "อีเมล",
+  "ward": "หน่วยงาน / หอผู้ป่วย (Ward)",
   "confirmPassword": "ยืนยันรหัสผ่าน",
   "confirmPasswordError": "รหัสผ่านไม่ตรงกัน",
   "submit": "ลงทะเบียน"

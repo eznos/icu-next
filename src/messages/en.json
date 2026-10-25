@@ -21,6 +21,7 @@
  "sidebar": {
   "dashboard": "Dashboard",
   "official": "Official",
+  "patients": "Patients",
   "reports": "Reports",
   "settings": "Settings"
  },
@@ -57,6 +58,7 @@
   "username": "Username",
   "password": "Password",
   "email": "Email",
+  "ward": "Ward / Department",
   "confirmPassword": "Confirm Password",
   "confirmPasswordError": "Passwords do not match",
   "submit": "Register"

@@ -10,7 +10,7 @@ export const userRoutes = new Elysia({ prefix: '/user' })
  .post(
   '/register',
   async ({ body, set }): Promise<ResponseTypeBasic<undefined>> => {
-   const { username, email, password, role } = body
+   const { username, email, password, role, ward } = body
 
    const existingUser = await User.findOne({ $or: [{ username }, { email }] })
    if (existingUser) {
@@ -24,7 +24,13 @@ export const userRoutes = new Elysia({ prefix: '/user' })
 
    const passwordHash = await Bun.password.hash(password)
 
-   const newUser = new User({ username, email, passwordHash, role })
+   const newUser = new User({
+    username,
+    email,
+    passwordHash,
+    role,
+    ward: ward?.toUpperCase() || 'MICU3',
+   })
    await newUser.save()
 
    return { message: 'สมัครสมาชิกสำเร็จ', statusCode: 200, data: undefined }
@@ -35,12 +41,12 @@ export const userRoutes = new Elysia({ prefix: '/user' })
     email: t.String(),
     password: t.String(),
     role: t.Optional(t.String({ pattern: '^(user|admin)$' })),
+    ward: t.Optional(t.String()),
    }),
   },
  )
 
  // 3. Route: Login (เข้าสู่ระบบ)
- // 🌟 สังเกตตรงนี้: ดึง jwt ออกมาจาก Context ตรงๆ (อย่าลืมใส่ :any ถ้าระบบ Type แจ้งเตือน เพราะเราจะไปผูก JWT ที่หน้า index.ts)
  .post(
   '/login',
   async ({
@@ -50,10 +56,9 @@ export const userRoutes = new Elysia({ prefix: '/user' })
   }): Promise<
    ResponseTypeBasic<{
     token: string
-    user: { username: string; role: 'user' | 'admin' }
+    user: { username: string; role: 'user' | 'admin'; ward: string }
    }>
   > => {
-   // 🌟 สังเกตว่าเราไม่ต้องพิมพ์ :any หรือ :AuthContext เลย! พิมพ์ jwt. แล้ว Auto-complete จะขึ้นมาเอง
    const { username, password } = body
 
    const user = await User.findOne({ username })
@@ -66,9 +71,12 @@ export const userRoutes = new Elysia({ prefix: '/user' })
     }
    }
 
+   const userWard = user.ward || 'MICU3'
+
    const token = await jwt.sign({
     id: user._id.toString(),
     role: user.role,
+    ward: userWard,
    })
 
    return {
@@ -76,7 +84,7 @@ export const userRoutes = new Elysia({ prefix: '/user' })
     statusCode: 200,
     data: {
      token,
-     user: { username: user.username, role: user.role },
+     user: { username: user.username, role: user.role, ward: userWard },
     },
    }
   },

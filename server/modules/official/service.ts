@@ -91,9 +91,10 @@ export abstract class officialService {
  static async getDetailOfficial({ id }: { id: string }) {
   try {
    const isObjectId = mongoose.Types.ObjectId.isValid(id)
-   const query = isObjectId
+   const idQuery = isObjectId
     ? { $or: [{ objectUuId: id }, { _id: id }] }
     : { objectUuId: id }
+   const query = { ...idQuery, isDeleted: { $ne: true } }
 
    const checkExistingOfficial = await Official.findOne(query).lean()
    if (!checkExistingOfficial) {
@@ -149,14 +150,13 @@ export abstract class officialService {
   const order = query?.order === 'asc' ? 1 : -1
 
   try {
-   const filterQuery = search
-    ? {
-       $or: [
-        { fullName: { $regex: search, $options: 'i' } },
-        { position: { $regex: search, $options: 'i' } },
-       ],
-      }
-    : {}
+   const filterQuery: any = { isDeleted: { $ne: true } }
+   if (search) {
+    filterQuery.$or = [
+     { fullName: { $regex: search, $options: 'i' } },
+     { position: { $regex: search, $options: 'i' } },
+    ]
+   }
 
    const officials = await Official.find(filterQuery)
     .sort({ fullName: order })
@@ -222,7 +222,8 @@ export abstract class officialService {
      statusCode: 404,
     })
    }
-   await Official.updateOne(query, body)
+   const { _id, objectUuId, ...updateData } = body as any
+   await Official.updateOne(query, updateData)
    return {
     message: 'อัปเดตข้อมูลผู้ปฏิบัติการสำเร็จ',
     statusCode: 200,
@@ -239,9 +240,10 @@ export abstract class officialService {
  static async deleteOfficial({ id }: { id: string }) {
   try {
    const isObjectId = mongoose.Types.ObjectId.isValid(id)
-   const query = isObjectId
+   const idQuery = isObjectId
     ? { $or: [{ objectUuId: id }, { _id: id }] }
     : { objectUuId: id }
+   const query = { ...idQuery, isDeleted: { $ne: true } }
 
    const checkExistingOfficial = await Official.findOne(query)
    if (!checkExistingOfficial) {
@@ -251,7 +253,10 @@ export abstract class officialService {
      statusCode: 404,
     })
    }
-   await Official.deleteOne(query)
+   await Official.updateOne(query, {
+    isDeleted: true,
+    deletedAt: new Date(),
+   })
    return {
     message: 'ลบข้อมูลผู้ปฏิบัติการสำเร็จ',
     statusCode: 200,

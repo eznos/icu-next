@@ -5,6 +5,7 @@ import { Elysia } from 'elysia'
 export type CurrentUser = {
  id: string
  role: 'user' | 'admin'
+ ward: string
 }
 
 export const authSetup = (app: Elysia) =>
@@ -16,19 +17,25 @@ export const authSetup = (app: Elysia) =>
     exp: '1d',
    }),
   )
-  .derive(async ({ jwt, headers: { authorization } }) => {
-   if (!authorization?.startsWith('Bearer ')) {
+  .derive(async ({ jwt, headers: { authorization }, cookie: { token: cookieToken } }) => {
+   let rawToken: string | undefined
+   if (authorization?.startsWith('Bearer ')) {
+    rawToken = authorization.split(' ')[1]
+   } else if (typeof cookieToken?.value === 'string') {
+    rawToken = cookieToken.value
+   }
+
+   if (!rawToken) {
     return { currentUser: null as CurrentUser | null }
    }
 
-   const token = authorization.split(' ')[1]
-   const payload = await jwt.verify(token)
+   const payload = await jwt.verify(rawToken)
 
    if (!payload) {
     return { currentUser: null as CurrentUser | null }
    }
 
    return {
-    currentUser: payload as CurrentUser,
+    currentUser: payload as unknown as CurrentUser,
    }
   })
