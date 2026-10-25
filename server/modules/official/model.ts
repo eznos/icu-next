@@ -88,10 +88,13 @@ export const OfficialSchema = t.Object({
   }),
  ),
  deletedAt: t.Optional(
-  t.String({
-   format: 'date-time',
-   description: 'วันที่ลบข้อมูล',
-  }),
+  t.Union([
+   t.String({
+    format: 'date-time',
+    description: 'วันที่ลบข้อมูล',
+   }),
+   t.Null(),
+  ]),
  ),
 })
 

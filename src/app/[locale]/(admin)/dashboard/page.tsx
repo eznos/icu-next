@@ -1,6 +1,7 @@
 'use client'
 
-import { fetchDashboardData } from '@/apis/api'
+import { BedMapping } from '@/components/admin/dashboard'
+import { useDashboardData } from '@/apis/api'
 import { useTranslationsNext } from '@/i18n/use-translate-next'
 // import { fetchDashboardData } from '@/lib/api'
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded'
@@ -15,7 +16,6 @@ import {
  Stack,
  Typography,
 } from '@mui/material'
-import useSWR from 'swr'
 
 const summaryKeys = [
  'totalPersonnel',
@@ -26,7 +26,7 @@ const summaryKeys = [
 
 export default function DashboardPage() {
  const t = useTranslationsNext('dashboard')
- const { data } = useSWR('dashboard', fetchDashboardData, {})
+ const { data } = useDashboardData()
 
  return (
   <Stack spacing={3}>
@@ -79,55 +79,10 @@ export default function DashboardPage() {
     ))}
    </Grid>
 
-   <Card>
-    <CardContent>
-     <Typography variant='h6' sx={{ fontWeight: 700, mb: 2 }}>
-      {t('bedMapping')}
-     </Typography>
-     <Grid container spacing={2}>
-      {data?.beds.map((bed) => (
-       <Grid
-        key={bed.id}
-        size={{
-         xs: 12,
-         md: 6,
-         lg: 3,
-        }}
-       >
-        <Card variant='outlined'>
-         <CardContent>
-          <Stack
-           direction='row'
-           sx={{ justifyContent: 'space-between', alignItems: 'center', mb: 1 }}
-          >
-           <Typography variant='subtitle1' sx={{ fontWeight: 700 }}>
-            {bed.id}
-           </Typography>
-           <Chip
-            label={bed.status}
-            size='small'
-            color={bed.status === 'Available' ? 'success' : 'warning'}
-           />
-          </Stack>
-          <Typography variant='body2'>Patient: {bed.patientName}</Typography>
-          <Typography variant='body2' sx={{ mb: 2 }}>
-           HN: {bed.hn}
-          </Typography>
-          <Button
-           variant='contained'
-           fullWidth
-           sx={{ mt: 1 }}
-           disabled={bed.status === 'Occupied'}
-          >
-           {t('register')}
-          </Button>
-         </CardContent>
-        </Card>
-       </Grid>
-      ))}
-     </Grid>
-    </CardContent>
-   </Card>
+   <BedMapping
+    wardName={data?.ward?.code || 'MICU3'}
+    beds={data?.bedMapping || []}
+   />
 
    <Card>
     <CardContent>
@@ -137,11 +92,11 @@ export default function DashboardPage() {
      <Box
       sx={{ display: 'flex', alignItems: 'flex-end', gap: 1.5, height: 180 }}
      >
-      {data?.monthlyAdmissions.map((value, index) => (
-       <Box key={`${value}-${index}`} sx={{ flex: 1 }}>
+      {data?.monthlyAdmissions?.data?.map((item) => (
+       <Box key={item.month} sx={{ flex: 1 }}>
         <Box
          sx={{
-          height: `${value * 3}px`,
+          height: `${Math.max(16, item.count * 12)}px`,
           backgroundColor: '#14B8A6',
           borderRadius: 1,
           minHeight: 16,
@@ -152,7 +107,7 @@ export default function DashboardPage() {
          variant='caption'
          sx={{ mt: 0.5, display: 'block' }}
         >
-         M{index + 1}
+         {item.label}
         </Typography>
        </Box>
       ))}

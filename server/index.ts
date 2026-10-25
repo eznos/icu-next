@@ -6,7 +6,8 @@ import { connectDB } from './db'
 import { officialRoutes } from './modules/official'
 import { patientRoutes } from './modules/patient'
 import { wardRoutes } from './modules/ward'
-import { dashboardRoutes } from './routes/dashboard.route'
+import { dashboardRoutes } from './modules/dashboard'
+import { kpiRoutes } from './modules/kpi'
 import { movieRoutes } from './routes/movie.route'
 import { userRoutes } from './routes/user.route'
 
@@ -44,6 +45,7 @@ export const app = new Elysia({ prefix: '/api' })
  .use(movieRoutes)
  .use(userRoutes)
  .use(officialRoutes)
+ .use(kpiRoutes)
 
 if (
  process.env.NODE_ENV !== 'production' &&

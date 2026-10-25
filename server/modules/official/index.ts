@@ -124,6 +124,12 @@ export const officialRoutes = new Elysia({ prefix: '/official' })
       default: '',
      }),
     ),
+    sortBy: t.Optional(
+     t.String({
+      description: 'ฟิลด์ที่ต้องการเรียงข้อมูล เช่น createdAt, fullName',
+      default: 'createdAt',
+     }),
+    ),
     // 2. เปลี่ยน t.String เป็น t.Union เพื่อระบุรับแค่ 'asc' หรือ 'desc'
     order: t.Optional(
      t.Union([t.Literal('asc'), t.Literal('desc')], {

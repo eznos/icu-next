@@ -1,6 +1,10 @@
 'use client'
 
-import { usePatientCreate, usePatientDetail, usePatientUpdate } from '@/apis/patients'
+import {
+ usePatientCreate,
+ usePatientDetail,
+ usePatientUpdate,
+} from '@/apis/patients'
 import { useSnackBarNotification } from '@/hooks'
 import { AdmissionType, PatientStatus, PatientType } from '@/types'
 import {
@@ -74,7 +78,8 @@ export const PatientModal = ({
 
  const { mutate: createMutate, isMutating: isCreating } = usePatientCreate()
  const { mutate: updateMutate, isMutating: isUpdating } = usePatientUpdate()
- const { data: detailResponse, isLoading: isLoadingDetail } = usePatientDetail(targetId)
+ const { data: detailResponse, isLoading: isLoadingDetail } =
+  usePatientDetail(targetId)
  const { showSnackbar } = useSnackBarNotification()
 
  const form = useForm<PatientFormFields>({
@@ -105,28 +110,41 @@ export const PatientModal = ({
   )
 
   return ALL_BEDS.filter(
-   (bed) => !occupiedBedSet.has(bed.id) || (isEdit && bed.id === data?.bedNumber),
+   (bed) =>
+    !occupiedBedSet.has(bed.id) || (isEdit && bed.id === data?.bedNumber),
   )
  }, [activePatients, targetId, isEdit, data?.bedNumber])
 
  useEffect(() => {
-  if (open && isEdit && detailResponse?.data) {
-   const detail = detailResponse.data
+  const currentRecord =
+   detailResponse?.data || (data?.patientName ? data : null)
+  if (open && isEdit && currentRecord) {
    form.reset({
-    bedNumber: detail.bedNumber || '',
-    hn: detail.hn || '',
-    an: detail.an || '',
-    admissionType: detail.admissionType || 'admit',
-    patientName: detail.patientName || '',
-    diagnosis: detail.diagnosis || '',
-    attendingDoctor: detail.attendingDoctor || '',
-    hometown: detail.hometown || '',
-    admissionDate: detail.admissionDate ? dayjs(detail.admissionDate) : null,
-    status: detail.status || 'admitted',
+    bedNumber: currentRecord.bedNumber || '',
+    hn: currentRecord.hn || '',
+    an: currentRecord.an || '',
+    admissionType: currentRecord.admissionType || 'admit',
+    patientName: currentRecord.patientName || '',
+    diagnosis: currentRecord.diagnosis || '',
+    attendingDoctor: currentRecord.attendingDoctor || '',
+    hometown: currentRecord.hometown || '',
+    admissionDate: currentRecord.admissionDate
+     ? dayjs(currentRecord.admissionDate)
+     : null,
+    status: currentRecord.status || 'admitted',
    })
   } else if (open && !isEdit) {
+   const requestedBedNum = data?.bedNumber
+    ? data.bedNumber.replace(/\D/g, '')
+    : null
+   const matchedOption = requestedBedNum
+    ? availableBedOptions.find(
+       (b) => b.id.replace(/\D/g, '') === requestedBedNum,
+      )
+    : null
+
    form.reset({
-    bedNumber: availableBedOptions[0]?.id || '',
+    bedNumber: matchedOption?.id || availableBedOptions[0]?.id || '',
     hn: '',
     an: '',
     admissionType: 'admit',
@@ -138,7 +156,7 @@ export const PatientModal = ({
     status: 'admitted',
    })
   }
- }, [open, isEdit, detailResponse, form, availableBedOptions])
+ }, [open, isEdit, detailResponse, data, form, availableBedOptions])
 
  const handleClose = () => {
   form.reset()
@@ -185,7 +203,10 @@ export const PatientModal = ({
      handleClose()
     },
     onError: (error: any) => {
-     showSnackbar(error.message || 'เกิดข้อผิดพลาดในการลงทะเบียนผู้ป่วย', 'error')
+     showSnackbar(
+      error.message || 'เกิดข้อผิดพลาดในการลงทะเบียนผู้ป่วย',
+      'error',
+     )
     },
    })
   }
@@ -213,20 +234,35 @@ export const PatientModal = ({
    <LocalizationProvider dateAdapter={AdapterDayjs}>
     <FormContainer formContext={form} onSuccess={handleSubmit}>
      <DialogTitle sx={{ pb: 1 }}>
-      <Typography variant='h6' sx={{ fontWeight: 700, color: '#1E293B' }}>
+      <Typography variant='h6' sx={{ fontWeight: 700, color: 'text.primary' }}>
        {dialogTitle}
       </Typography>
      </DialogTitle>
 
      <DialogContent sx={{ pt: '12px !important' }}>
       {isEdit && isLoadingDetail ? (
-       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+       <Box
+        sx={{
+         display: 'flex',
+         justifyContent: 'center',
+         alignItems: 'center',
+         py: 8,
+        }}
+       >
         <CircularProgress size={32} sx={{ color: '#0da176' }} />
        </Box>
       ) : (
        <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           ระบุหมายเลขเตียง *
          </Typography>
          <SelectElement
@@ -239,7 +275,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           หมายเลข HN *
          </Typography>
          <TextFieldElement
@@ -252,7 +296,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           หมายเลข AN *
          </Typography>
          <TextFieldElement
@@ -265,7 +317,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           ประเภทการรับเข้า *
          </Typography>
          <SelectElement
@@ -278,7 +338,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           ชื่อจริง - นามสกุลผู้ป่วย *
          </Typography>
          <TextFieldElement
@@ -291,7 +359,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           การวินิจฉัยโรคเบื้องต้น (DX.) *
          </Typography>
          <TextFieldElement
@@ -304,7 +380,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           แพทย์เจ้าของไข้ *
          </Typography>
          <TextFieldElement
@@ -317,7 +401,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           ภูมิลำเนา (จังหวัด/อำเภอ) *
          </Typography>
          <TextFieldElement
@@ -330,7 +422,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           วันที่เข้ารับการรักษา MICU3 *
          </Typography>
          <DatePickerElement
@@ -342,7 +442,15 @@ export const PatientModal = ({
         </Grid>
 
         <Grid size={{ xs: 12, md: 4 }}>
-         <Typography variant='caption' sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block' }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
           สถานะการรักษา *
          </Typography>
          <SelectElement
@@ -379,15 +487,15 @@ export const PatientModal = ({
            disabled={isSubmitting}
            onClick={handleClose}
            sx={{
-            borderColor: '#E2E8F0',
-            color: '#1E293B',
+            borderColor: 'divider',
+            color: 'text.primary',
             borderRadius: '8px',
             px: 3,
             py: 1,
             fontWeight: 600,
             textTransform: 'none',
             fontSize: '0.95rem',
-            '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC' },
+            '&:hover': { borderColor: 'text.secondary', bgcolor: 'action.hover' },
            }}
           >
            ยกเลิก

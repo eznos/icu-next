@@ -25,6 +25,7 @@ const navIcons = {
  patients: <PeopleAltRoundedIcon fontSize='small' />,
  reports: <DescriptionRoundedIcon fontSize='small' />,
  settings: <SettingsRoundedIcon fontSize='small' />,
+ kpi: <SettingsRoundedIcon fontSize='small' />,
 }
 
 type SidebarProps = {
@@ -42,6 +43,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
   { key: 'dashboard', href: `/${locale}/dashboard` },
   { key: 'official', href: `/${locale}/official` },
   { key: 'patients', href: `/${locale}/patients` },
+  { key: 'kpi', href: `/${locale}/kpi` },
   { key: 'reports', href: `/${locale}/reports` },
   { key: 'settings', href: `/${locale}/settings` },
  ]

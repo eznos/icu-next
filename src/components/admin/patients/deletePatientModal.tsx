@@ -59,7 +59,10 @@ export const DeletePatientModal = ({
       width: 64,
       height: 64,
       borderRadius: '50%',
-      bgcolor: '#FEF9C3',
+      bgcolor: (theme) =>
+       theme.palette.mode === 'dark'
+        ? 'rgba(245, 158, 11, 0.15)'
+        : '#FEF9C3',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -70,14 +73,14 @@ export const DeletePatientModal = ({
      <WarningRoundedIcon sx={{ fontSize: 36, color: '#F59E0B' }} />
     </Box>
 
-    <Typography variant='h6' sx={{ fontWeight: 700, color: '#0F172A', mb: 1.25 }}>
+    <Typography variant='h6' sx={{ fontWeight: 700, color: 'text.primary', mb: 1.25 }}>
      ลบประวัติผู้ป่วย {data?.bedNumber || ''}?
     </Typography>
 
     <Typography
      variant='body2'
      sx={{
-      color: '#475569',
+      color: 'text.secondary',
       lineHeight: 1.6,
       mb: 3.5,
       px: 1,
@@ -111,14 +114,14 @@ export const DeletePatientModal = ({
       disabled={isMutating}
       onClick={onClose}
       sx={{
-       borderColor: '#E2E8F0',
-       color: '#1E293B',
+       borderColor: 'divider',
+       color: 'text.primary',
        borderRadius: '8px',
        py: 1.25,
        fontWeight: 600,
        textTransform: 'none',
        fontSize: '0.95rem',
-       '&:hover': { borderColor: '#CBD5E1', bgcolor: '#F8FAFC' },
+       '&:hover': { borderColor: 'text.secondary', bgcolor: 'action.hover' },
       }}
      >
       ยกเลิก

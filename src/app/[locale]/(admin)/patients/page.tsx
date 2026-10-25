@@ -11,10 +11,18 @@ import { useDialog } from '@/hooks/useDialog'
 import { PatientType } from '@/types'
 import PersonAddIcon from '@mui/icons-material/PersonAdd'
 import { Box, Button, CircularProgress, Typography } from '@mui/material'
-import { useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useRef, useState } from 'react'
 
-export default function PatientsPage() {
+function PatientsContent() {
  const [statusFilter, setStatusFilter] = useState<string>('')
+ const router = useRouter()
+ const { locale } = useParams<{ locale: string }>()
+ const searchParams = useSearchParams()
+
+ const paramId = searchParams.get('id')
+ const paramAction = searchParams.get('action')
+ const paramBed = searchParams.get('bed')
 
  const {
   open: isPatientModalOpen,
@@ -36,6 +44,55 @@ export default function PatientsPage() {
   sortBy: 'admissionDate',
   order: 'desc',
  })
+
+ const currentParamKey = paramAction
+  ? `${paramAction}_${paramBed || ''}`
+  : paramId
+    ? `id_${paramId}`
+    : null
+
+ const handledParamKeyRef = useRef<string | null>(null)
+
+ useEffect(() => {
+  if (!currentParamKey) {
+   handledParamKeyRef.current = null
+   return
+  }
+
+  if (handledParamKeyRef.current === currentParamKey) {
+   return
+  }
+
+  handledParamKeyRef.current = currentParamKey
+
+  if (paramAction === 'create') {
+   openPatientModal(paramBed ? ({ bedNumber: paramBed } as PatientType) : null)
+  } else if (paramId) {
+   const existing = data?.data?.find(
+    (p) => p.objectUuId === paramId || p._id === paramId,
+   )
+   if (existing) {
+    openPatientModal(existing)
+   } else {
+    openPatientModal({ objectUuId: paramId } as PatientType)
+   }
+  }
+ }, [currentParamKey, paramAction, paramId, paramBed, data?.data, openPatientModal])
+
+ const handleClosePatientModal = () => {
+  closePatientModal()
+  if (paramId || paramAction || paramBed) {
+   router.replace(`/${locale || 'th'}/patients`)
+  }
+ }
+
+ const handleSuccessPatientModal = () => {
+  closePatientModal()
+  mutate()
+  if (paramId || paramAction || paramBed) {
+   router.replace(`/${locale || 'th'}/patients`)
+  }
+ }
 
  const handleRowClick = (row: PatientType, event: 'edit' | 'delete') => {
   if (event === 'edit') {
@@ -85,8 +142,8 @@ export default function PatientsPage() {
    />
    <PatientModal
     open={isPatientModalOpen}
-    onClose={closePatientModal}
-    onSuccess={() => mutate()}
+    onClose={handleClosePatientModal}
+    onSuccess={handleSuccessPatientModal}
     data={selectedPatient}
     activePatients={data?.data || []}
    />
@@ -97,5 +154,20 @@ export default function PatientsPage() {
     data={deletePatientData}
    />
   </Box>
+ )
+}
+
+export default function PatientsPage() {
+ return (
+  <Suspense
+   fallback={
+    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', p: 3 }}>
+     <CircularProgress size={24} sx={{ color: '#0da176' }} />
+     <Typography>กำลังโหลดข้อมูลผู้ป่วย...</Typography>
+    </Box>
+   }
+  >
+   <PatientsContent />
+  </Suspense>
  )
 }

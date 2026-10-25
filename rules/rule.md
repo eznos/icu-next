@@ -1,7 +1,7 @@
 You are a Sr. Full Stack Engineer and Enterprise Architect. Your task is to scaffold the internal codebase for the "icu-next” project.
 Tech Stack:
 
-- Frontend: Next.js + Mobile Web View (App Router, TSX)
+- Frontend: Next.js + Mobile Web View + dark mode, light mode color (base on color schema is not fixed color in sx) (App Router, TSX)
 - Backend: ElysiaJS (TypeScript, Bun)
   Code Style & Authorship (Senior Engineer Standard): Backend Structure: back_end_structure.txt
 

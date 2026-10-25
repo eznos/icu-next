@@ -386,7 +386,8 @@ export function TableList<T extends Record<string, unknown>>({
    sx={{
     ...sx,
     '& .MuiTableCell-root': {
-     borderBottom: `1px solid #d5d7dc`,
+     borderBottom: '1px solid',
+     borderColor: 'divider',
     },
     height: '200px',
    }}
@@ -491,7 +492,10 @@ export function TableList<T extends Record<string, unknown>>({
              left: stickyLeftPositions[col.key] || 0,
              bgcolor: 'background.paper', // บังคับใส่สีพื้นหลังไม่ให้ทะลุ
              zIndex: 3, // ให้อยู่บนสุดเหนือเนื้อหาปกติ
-             boxShadow: '1px 0 0 0 rgba(0,0,0,0.05)', // ใส่เส้นขอบบางๆ ด้านขวา
+             boxShadow: (theme) =>
+              theme.palette.mode === 'dark'
+               ? '1px 0 0 0 rgba(255,255,255,0.08)'
+               : '1px 0 0 0 rgba(0,0,0,0.05)',
             }),
             ...col.sx,
            }}
@@ -575,7 +579,7 @@ export function TableList<T extends Record<string, unknown>>({
             onClick={() => onRowClick?.(row)}
             sx={{
              cursor: onRowClick ? 'pointer' : 'default',
-             '&:hover': onRowClick ? { bgcolor: '#f5f5f5' } : {},
+             '&:hover': onRowClick ? { bgcolor: 'action.hover' } : {},
             }}
            >
             {visibleColumns.map((col) => {
@@ -593,10 +597,13 @@ export function TableList<T extends Record<string, unknown>>({
                  left: stickyLeftPositions[col.key] || 0,
                  bgcolor: 'background.paper',
                  zIndex: 1, // ให้อยู่เหนือ Cell ปกติ แต่ต่ำกว่า Header
-                 boxShadow: '1px 0 0 0 rgba(0,0,0,0.05)',
+                 boxShadow: (theme) =>
+                  theme.palette.mode === 'dark'
+                   ? '1px 0 0 0 rgba(255,255,255,0.08)'
+                   : '1px 0 0 0 rgba(0,0,0,0.05)',
                  // โค้ดรักษา Hover Effect ให้กับ Cell ที่ถูกตรึง
                  '.MuiTableRow-root:hover &': onRowClick
-                  ? { bgcolor: '#f5f5f5' }
+                  ? { bgcolor: 'action.hover' }
                   : {},
                 }),
                 ...col.sx,

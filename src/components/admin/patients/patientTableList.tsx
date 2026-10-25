@@ -25,11 +25,40 @@ type PatientTableListProps = {
 
 const admissionTypeBadgeConfig: Record<
  string,
- { label: string; bg: string; color: string; border: string }
+ {
+  label: string
+  bg: (theme: any) => string
+  color: (theme: any) => string
+  border: (theme: any) => string
+ }
 > = {
- refer: { label: 'Fastack (Refer)', bg: '#FDF2F8', color: '#DB2777', border: '#FBCFE8' },
- transfer: { label: 'รับย้าย', bg: '#F3E8FF', color: '#9333EA', border: '#E9D5FF' },
- admit: { label: 'รับใหม่', bg: '#EFF6FF', color: '#2563EB', border: '#BFDBFE' },
+ refer: {
+  label: 'Fastack (Refer)',
+  bg: (theme: any) =>
+   theme.palette.mode === 'dark' ? 'rgba(219, 39, 119, 0.15)' : '#FDF2F8',
+  color: (theme: any) =>
+   theme.palette.mode === 'dark' ? '#F472B6' : '#DB2777',
+  border: (theme: any) =>
+   theme.palette.mode === 'dark' ? 'rgba(219, 39, 119, 0.3)' : '#FBCFE8',
+ },
+ transfer: {
+  label: 'รับย้าย',
+  bg: (theme: any) =>
+   theme.palette.mode === 'dark' ? 'rgba(147, 51, 234, 0.15)' : '#F3E8FF',
+  color: (theme: any) =>
+   theme.palette.mode === 'dark' ? '#C084FC' : '#9333EA',
+  border: (theme: any) =>
+   theme.palette.mode === 'dark' ? 'rgba(147, 51, 234, 0.3)' : '#E9D5FF',
+ },
+ admit: {
+  label: 'รับใหม่',
+  bg: (theme: any) =>
+   theme.palette.mode === 'dark' ? 'rgba(37, 99, 235, 0.15)' : '#EFF6FF',
+  color: (theme: any) =>
+   theme.palette.mode === 'dark' ? '#60A5FA' : '#2563EB',
+  border: (theme: any) =>
+   theme.palette.mode === 'dark' ? 'rgba(37, 99, 235, 0.3)' : '#BFDBFE',
+ },
 }
 
 export const PatientTableList = ({
@@ -58,14 +87,18 @@ export const PatientTableList = ({
       width: 32,
       height: 32,
       borderRadius: '50%',
-      border: '1.5px solid #10B981',
+      border: '1.5px solid',
+      borderColor: (theme) =>
+       theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.5)' : '#10B981',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       fontWeight: 700,
       fontSize: '0.875rem',
-      color: '#047857',
-      bgcolor: '#ECFDF5',
+      color: (theme) =>
+       theme.palette.mode === 'dark' ? '#34D399' : '#047857',
+      bgcolor: (theme) =>
+       theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.12)' : '#ECFDF5',
      }}
     >
      {row.bedNumber.replace(/[^0-9]/g, '') || row.bedNumber}
@@ -78,10 +111,10 @@ export const PatientTableList = ({
    width: 220,
    renderCell: (row) => (
     <Box>
-     <Typography variant='body2' sx={{ fontWeight: 700, color: '#1E293B' }}>
+     <Typography variant='body2' sx={{ fontWeight: 700, color: 'text.primary' }}>
       {row.patientName}
      </Typography>
-     <Typography variant='caption' sx={{ color: '#64748B', display: 'block', mt: 0.25 }}>
+     <Typography variant='caption' sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>
       HN: {row.hn} | AN: {row.an}
      </Typography>
     </Box>
@@ -92,7 +125,7 @@ export const PatientTableList = ({
    label: 'ภูมิลำเนา',
    width: 160,
    renderCell: (row) => (
-    <Typography variant='body2' sx={{ color: '#475569' }}>
+    <Typography variant='body2' sx={{ color: 'text.secondary' }}>
      {row.hometown}
     </Typography>
    ),
@@ -103,12 +136,18 @@ export const PatientTableList = ({
    width: 240,
    renderCell: (row) => (
     <Box>
-     <Typography variant='body2' sx={{ fontWeight: 700, color: '#1E293B' }}>
+     <Typography variant='body2' sx={{ fontWeight: 700, color: 'text.primary' }}>
       {row.diagnosis}
      </Typography>
      <Typography
       variant='caption'
-      sx={{ color: '#059669', fontWeight: 600, display: 'block', mt: 0.25 }}
+      sx={{
+       color: (theme) =>
+        theme.palette.mode === 'dark' ? '#34D399' : '#059669',
+       fontWeight: 600,
+       display: 'block',
+       mt: 0.25,
+      }}
      >
       แพทย์: {row.attendingDoctor}
      </Typography>
@@ -123,9 +162,12 @@ export const PatientTableList = ({
     const badge =
      admissionTypeBadgeConfig[row.admissionType] || {
       label: row.admissionType,
-      bg: '#F1F5F9',
-      color: '#475569',
-      border: '#E2E8F0',
+      bg: (theme: any) =>
+       theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
+      color: (theme: any) =>
+       theme.palette.mode === 'dark' ? '#94A3B8' : '#475569',
+      border: (theme: any) =>
+       theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
      }
     const formattedDate = row.admissionDate
      ? dayjs(row.admissionDate).format('YYYY-MM-DD')
@@ -133,7 +175,7 @@ export const PatientTableList = ({
 
     return (
      <Box>
-      <Typography variant='body2' sx={{ color: '#1E293B', mb: 0.5 }}>
+      <Typography variant='body2' sx={{ color: 'text.primary', mb: 0.5 }}>
        {formattedDate}
       </Typography>
       <Box
@@ -147,7 +189,8 @@ export const PatientTableList = ({
         fontWeight: 600,
         bgcolor: badge.bg,
         color: badge.color,
-        border: `1px solid ${badge.border}`,
+        border: '1px solid',
+        borderColor: badge.border,
        }}
       >
        {badge.label}
@@ -172,9 +215,31 @@ export const PatientTableList = ({
        borderRadius: '16px',
        fontSize: '0.75rem',
        fontWeight: 600,
-       bgcolor: isAdmitted ? '#FEF2F2' : '#F1F5F9',
-       color: isAdmitted ? '#DC2626' : '#64748B',
-       border: `1px solid ${isAdmitted ? '#FECACA' : '#E2E8F0'}`,
+       bgcolor: (theme) =>
+        isAdmitted
+         ? theme.palette.mode === 'dark'
+           ? 'rgba(239, 68, 68, 0.15)'
+           : '#FEF2F2'
+         : theme.palette.mode === 'dark'
+           ? 'rgba(148, 163, 184, 0.12)'
+           : '#F1F5F9',
+       color: (theme) =>
+        isAdmitted
+         ? theme.palette.mode === 'dark'
+           ? '#F87171'
+           : '#DC2626'
+         : theme.palette.mode === 'dark'
+           ? '#94A3B8'
+           : '#64748B',
+       border: '1px solid',
+       borderColor: (theme) =>
+        isAdmitted
+         ? theme.palette.mode === 'dark'
+           ? 'rgba(239, 68, 68, 0.3)'
+           : '#FECACA'
+         : theme.palette.mode === 'dark'
+           ? 'rgba(148, 163, 184, 0.25)'
+           : '#E2E8F0',
       }}
      >
       {isAdmitted ? 'กำลังรักษา' : 'จำหน่ายแล้ว'}
@@ -191,14 +256,32 @@ export const PatientTableList = ({
      <IconButton
       size='small'
       onClick={() => onRowClick?.(row, 'edit')}
-      sx={{ color: '#64748B', '&:hover': { color: '#0da176', bgcolor: '#F1F5F9' } }}
+      sx={{
+       color: 'text.secondary',
+       '&:hover': {
+        color: '#0da176',
+        bgcolor: (theme) =>
+         theme.palette.mode === 'dark'
+          ? 'rgba(20, 184, 166, 0.1)'
+          : '#F1F5F9',
+       },
+      }}
      >
       <PersonOutlineIcon sx={{ fontSize: 20 }} />
      </IconButton>
      <IconButton
       size='small'
       onClick={() => onRowClick?.(row, 'delete')}
-      sx={{ color: '#64748B', '&:hover': { color: '#DC2626', bgcolor: '#FEF2F2' } }}
+      sx={{
+       color: 'text.secondary',
+       '&:hover': {
+        color: '#DC2626',
+        bgcolor: (theme) =>
+         theme.palette.mode === 'dark'
+          ? 'rgba(220, 38, 38, 0.1)'
+          : '#FEF2F2',
+       },
+      }}
      >
       <DeleteOutlineIcon sx={{ fontSize: 20 }} />
      </IconButton>
@@ -219,7 +302,7 @@ export const PatientTableList = ({
    title={
     <Typography
      variant='subtitle1'
-     sx={{ fontWeight: 700, color: '#1E293B', mr: 'auto' }}
+     sx={{ fontWeight: 700, color: 'text.primary', mr: 'auto' }}
     >
      รายการประวัติผู้ป่วยทั้งหมด: {filteredData.length} รายการ
     </Typography>
@@ -232,8 +315,14 @@ export const PatientTableList = ({
       displayEmpty
       sx={{
        borderRadius: '8px',
-       bgcolor: '#fff',
+       bgcolor: 'background.paper',
+       color: 'text.primary',
        fontSize: '0.875rem',
+       border: '1px solid',
+       borderColor: 'divider',
+       '& .MuiOutlinedInput-notchedOutline': {
+        border: 'none',
+       },
       }}
      >
       <MenuItem value=''>ทุกสถานะ</MenuItem>

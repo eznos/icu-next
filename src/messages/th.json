@@ -1,87 +1,82 @@
 {
- "navBar": {
-  "brand": "MICU3 System",
-  "online": "ออนไลน์"
- },
-
- "language": {
-  "th": "ไทย",
-  "en": "อังกฤษ",
-  "changeLanguage": "เปลี่ยนภาษา"
- },
- "common": {
-  "save": "บันทึก",
-  "cancel": "ยกเลิก",
-  "delete": "ลบ",
-  "edit": "แก้ไข",
-  "add": "เพิ่ม"
- },
-
- "sidebar": {
-  "dashboard": "แดชบอร์ด",
-  "official": "บุคลากรทางการพยาบาล",
-  "patients": "ผู้ป่วย",
-  "reports": "รายงาน",
-  "settings": "ตั้งค่า"
- },
-
- "dashboard": {
-  "title": "แดชบอร์ด",
-  "warningTitle": "แจ้งเตือน / คำเตือน",
-  "warningItems": [
-   "ใบอนุญาตแพทย์จะหมดอายุใน 7 วัน",
-   "ตารางเวรพยาบาลซ้ำซ้อนในหน่วย B",
-   "เตียง ICU #06 ต้องซ่อมบำรุง"
-  ],
-  "totalPersonnel": "บุคลากรทั้งหมด",
-  "activePatients": "ผู้ป่วยปัจจุบัน",
-  "availableBeds": "เตียงว่าง",
-  "pendingAdmissions": "รอรับเข้า",
-  "bedMapping": "ผังเตียง",
-  "register": "ลงทะเบียนผู้ป่วย",
-  "chartTitle": "สถิติ ICU รายเดือน"
- },
-
- "login": {
-  "title": "เข้าสู่ระบบ",
-  "username": "ชื่อผู้ใช้",
-  "password": "รหัสผ่าน",
-  "submit": "เข้าสู่ระบบ",
-  "menu": {
-   "forgotPassword": "ลืมรหัสผ่าน?",
-   "register": "ลงทะเบียน"
-  }
- },
-
- "register": {
-  "title": "ลงทะเบียน",
-  "username": "ชื่อผู้ใช้",
-  "password": "รหัสผ่าน",
-  "email": "อีเมล",
-  "ward": "หน่วยงาน / หอผู้ป่วย (Ward)",
-  "confirmPassword": "ยืนยันรหัสผ่าน",
-  "confirmPasswordError": "รหัสผ่านไม่ตรงกัน",
-  "submit": "ลงทะเบียน"
- },
-
- "official": {
-  "title": "ทะเบียนประวัติและข้อมูลสารบรรณพยาบาล",
-  "subTitle": "ควบคุมระดับความเชี่ยวชาญ และระบบเตือนอายุใบประกอบวิชาชีพก่อนหมดอายุ 90 วัน",
-  "name": "ชื่อ",
-  "fullName": "ชื่อ-นามสกุล",
-  "age": "อายุ",
-  "gender": "เพศ",
-  "position": "ตำแหน่งทางการศึกษา/วิชาชีพ",
-  "competencyLevel": "ระดับสมรรถนะ",
-  "licenseNumber": "เลขที่ใบอนุญาตประกอบโรคศิลป์",
-  "licenseExpiryDate": "วันหมดอายุใบอนุญาตประกอบโรคฯ",
-  "phone": "หมายเลขโทรศัพท์",
-  "evidence": "หลักฐานใบประกอบวิชาชีพ",
-  "uploadEvidence": "อัปโหลดแนบไฟล์ PDF หลักฐานใบประกอบวิชาชีพ",
-  "singleFileNotice": "เพื่อรองรับการทำงานแบบ Single-File แฟ้มเอกสารจะถูกบันทึกเชิงจำลองภายในแอปพลิเคชันโดยอัตโนมัติ",
-  "addOfficialInfo": "เพิ่มข้อมูลสารบรรณพยาบาล",
-  "saveOfficialInfo": "บันทึกข้อมูลสารบรรณพยาบาล",
-  "titleModal": "เพิ่มข้อมูลสารบรรณพยาบาล",
-  "titleModalEdit": "แก้ไขข้อมูลสารบรรณพยาบาล"
- }
+    "navBar": {
+        "brand": "MICU3 System",
+        "online": "ออนไลน์"
+    },
+    "language": {
+        "th": "ไทย",
+        "en": "อังกฤษ",
+        "changeLanguage": "เปลี่ยนภาษา"
+    },
+    "common": {
+        "save": "บันทึก",
+        "cancel": "ยกเลิก",
+        "delete": "ลบ",
+        "edit": "แก้ไข",
+        "add": "เพิ่ม"
+    },
+    "sidebar": {
+        "dashboard": "แดชบอร์ด",
+        "official": "บุคลากรทางการพยาบาล",
+        "patients": "ผู้ป่วย",
+        "reports": "รายงาน",
+        "settings": "ตั้งค่า",
+        "kpi": "ชี้วัดผลการปฏิบัติงาน"
+    },
+    "dashboard": {
+        "title": "แดชบอร์ด",
+        "warningTitle": "แจ้งเตือน / คำเตือน",
+        "warningItems": [
+            "ใบอนุญาตแพทย์จะหมดอายุใน 7 วัน",
+            "ตารางเวรพยาบาลซ้ำซ้อนในหน่วย B",
+            "เตียง ICU #06 ต้องซ่อมบำรุง"
+        ],
+        "totalPersonnel": "บุคลากรทั้งหมด",
+        "activePatients": "ผู้ป่วยปัจจุบัน",
+        "availableBeds": "เตียงว่าง",
+        "pendingAdmissions": "รอรับเข้า",
+        "bedMapping": "ผังเตียง",
+        "register": "ลงทะเบียนผู้ป่วย",
+        "chartTitle": "สถิติ ICU รายเดือน"
+    },
+    "login": {
+        "title": "เข้าสู่ระบบ",
+        "username": "ชื่อผู้ใช้",
+        "password": "รหัสผ่าน",
+        "submit": "เข้าสู่ระบบ",
+        "menu": {
+            "forgotPassword": "ลืมรหัสผ่าน?",
+            "register": "ลงทะเบียน"
+        }
+    },
+    "register": {
+        "title": "ลงทะเบียน",
+        "username": "ชื่อผู้ใช้",
+        "password": "รหัสผ่าน",
+        "email": "อีเมล",
+        "ward": "หน่วยงาน / หอผู้ป่วย (Ward)",
+        "confirmPassword": "ยืนยันรหัสผ่าน",
+        "confirmPasswordError": "รหัสผ่านไม่ตรงกัน",
+        "submit": "ลงทะเบียน"
+    },
+    "official": {
+        "title": "ทะเบียนประวัติและข้อมูลสารบรรณพยาบาล",
+        "subTitle": "ควบคุมระดับความเชี่ยวชาญ และระบบเตือนอายุใบประกอบวิชาชีพก่อนหมดอายุ 90 วัน",
+        "name": "ชื่อ",
+        "fullName": "ชื่อ-นามสกุล",
+        "age": "อายุ",
+        "gender": "เพศ",
+        "position": "ตำแหน่งทางการศึกษา/วิชาชีพ",
+        "competencyLevel": "ระดับสมรรถนะ",
+        "licenseNumber": "เลขที่ใบอนุญาตประกอบโรคศิลป์",
+        "licenseExpiryDate": "วันหมดอายุใบอนุญาตประกอบโรคฯ",
+        "phone": "หมายเลขโทรศัพท์",
+        "evidence": "หลักฐานใบประกอบวิชาชีพ",
+        "uploadEvidence": "อัปโหลดแนบไฟล์ PDF หลักฐานใบประกอบวิชาชีพ",
+        "singleFileNotice": "เพื่อรองรับการทำงานแบบ Single-File แฟ้มเอกสารจะถูกบันทึกเชิงจำลองภายในแอปพลิเคชันโดยอัตโนมัติ",
+        "addOfficialInfo": "เพิ่มข้อมูลสารบรรณพยาบาล",
+        "saveOfficialInfo": "บันทึกข้อมูลสารบรรณพยาบาล",
+        "titleModal": "เพิ่มข้อมูลสารบรรณพยาบาล",
+        "titleModalEdit": "แก้ไขข้อมูลสารบรรณพยาบาล"
+    }
 }

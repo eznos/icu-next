@@ -24,6 +24,8 @@ type xx = {
  licenseDocumentUrl: string // เก็บ URL ของไฟล์ PDF
  createdAt: Date
  updatedAt: Date
+ isDeleted?: boolean
+ deletedAt?: Date | null
 }
 
 export interface IOfficial extends Document, xx {}
@@ -117,6 +119,9 @@ export abstract class officialService {
     updatedAt: checkExistingOfficial.updatedAt
      ? new Date(checkExistingOfficial.updatedAt).toISOString()
      : undefined,
+    deletedAt: checkExistingOfficial.deletedAt
+     ? new Date(checkExistingOfficial.deletedAt).toISOString()
+     : null,
    }
 
    return {
@@ -140,6 +145,7 @@ export abstract class officialService {
    limit?: string
    page?: string
    search?: string
+   sortBy?: string
    order?: 'asc' | 'desc'
   }
  }) {
@@ -147,6 +153,7 @@ export abstract class officialService {
   const page = Number(query?.page) || 1
   const search = query?.search || ''
   const skip = (page - 1) * limit
+  const sortBy = query?.sortBy || 'fullName'
   const order = query?.order === 'asc' ? 1 : -1
 
   try {
@@ -159,7 +166,7 @@ export abstract class officialService {
    }
 
    const officials = await Official.find(filterQuery)
-    .sort({ fullName: order })
+    .sort({ [sortBy]: order })
     .skip(skip)
     .limit(limit)
     .lean()
@@ -179,6 +186,9 @@ export abstract class officialService {
     updatedAt: doc.updatedAt
      ? new Date(doc.updatedAt).toISOString()
      : undefined,
+    deletedAt: doc.deletedAt
+     ? new Date(doc.deletedAt).toISOString()
+     : null,
    }))
 
    // 🌟 2. ลบ status() ออก แล้ว return ค่ากลับไปตรงๆ
