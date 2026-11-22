@@ -10,9 +10,12 @@ export const TitlePage = ({ title, actions }: TitlePageProps) => {
   <Box
    sx={{
     display: 'flex',
-    alignItems: 'center',
+    alignItems: { xs: 'flex-start', sm: 'center' },
     justifyContent: actions ? 'space-between' : 'flex-start',
+    flexDirection: { xs: 'column', sm: 'row' },
+    gap: 1.5,
     mb: 2,
+    width: '100%',
    }}
   >
    {typeof title === 'string' ? (

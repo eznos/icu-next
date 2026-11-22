@@ -5,9 +5,12 @@ import { KpiCards } from '@/components/admin/kpi'
 import { TitlePage } from '@/components/utils/titlePage'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import { Suspense } from 'react'
+import { useCurrentUser } from '@/apis/auth'
 
 function KpiContent() {
- const { data, isLoading, error } = useKpiData('MICU3')
+ const { user } = useCurrentUser()
+
+ const { data, isLoading, error } = useKpiData(user?.ward)
  const kpiRecord = data?.data?.[0] || null
 
  if (error) {

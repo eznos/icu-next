@@ -20,6 +20,8 @@ import { FormContainer, SelectElement, TextFieldElement, useForm } from 'react-h
 
 type RegisterFormData = {
  username: string
+ firstName: string
+ lastName: string
  password: string
  email: string
  ward: string
@@ -51,6 +53,8 @@ export default function RegisterPage() {
  const formContext = useForm<RegisterFormData>({
   defaultValues: {
    username: '',
+   firstName: '',
+   lastName: '',
    email: '',
    ward: 'MICU3',
    password: '',
@@ -62,16 +66,18 @@ export default function RegisterPage() {
 
  const handleSubmit = async (data: RegisterFormData) => {
   const payload = {
-   username: data.username,
+   username: data.username.trim(),
+   firstName: data.firstName.trim(),
+   lastName: data.lastName.trim(),
    password: data.password,
-   email: data.email,
+   email: data.email.trim(),
    ward: data.ward || 'MICU3',
-   role: 'admin' as const,
+   role: 'user' as const,
   }
 
   try {
-   await mutate(payload)
-   showSnackbar('✅ สมัครสมาชิกสำเร็จ', 'success')
+   const res: any = await mutate(payload)
+   showSnackbar(res?.message || 'สมัครสมาชิกสำเร็จ กรุณารอผู้ดูแลระบบอนุมัติการใช้งาน', 'success')
    router.push('/th/login')
    return
   } catch (error: any) {
@@ -103,7 +109,7 @@ export default function RegisterPage() {
     p: 2,
    }}
   >
-   <Card sx={{ width: '100%', maxWidth: 420 }}>
+   <Card sx={{ width: '100%', maxWidth: 440 }}>
     <CardContent>
      <FormContainer formContext={formContext} onSuccess={handleSubmit}>
       <Stack spacing={2}>
@@ -111,7 +117,6 @@ export default function RegisterPage() {
         {t('title')}
        </Typography>
 
-       {/* 🌟 6. เพิ่ม name="username" และ name="password" และ name="email" */}
        <TextFieldElement
         name='username'
         label={t('username')}
@@ -119,6 +124,22 @@ export default function RegisterPage() {
         required
         disabled={isLoading}
        />
+       <Box sx={{ display: 'flex', gap: 1.5 }}>
+        <TextFieldElement
+         name='firstName'
+         label={t('firstName')}
+         fullWidth
+         required
+         disabled={isLoading}
+        />
+        <TextFieldElement
+         name='lastName'
+         label={t('lastName')}
+         fullWidth
+         required
+         disabled={isLoading}
+        />
+       </Box>
        <TextFieldElement
         name='email'
         label={t('email')}

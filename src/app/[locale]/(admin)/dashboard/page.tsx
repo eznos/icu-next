@@ -16,6 +16,7 @@ import {
  Stack,
  Typography,
 } from '@mui/material'
+import { useCurrentUser } from '@/apis/auth'
 
 const summaryKeys = [
  'totalPersonnel',
@@ -26,7 +27,9 @@ const summaryKeys = [
 
 export default function DashboardPage() {
  const t = useTranslationsNext('dashboard')
- const { data } = useDashboardData()
+ const { user } = useCurrentUser()
+
+ const { data } = useDashboardData(user?.ward)
 
  return (
   <Stack spacing={3}>
@@ -79,10 +82,7 @@ export default function DashboardPage() {
     ))}
    </Grid>
 
-   <BedMapping
-    wardName={data?.ward?.code || 'MICU3'}
-    beds={data?.bedMapping || []}
-   />
+   <BedMapping wardName={user?.ward} beds={data?.bedMapping || []} />
 
    <Card>
     <CardContent>

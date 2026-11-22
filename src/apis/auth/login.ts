@@ -39,6 +39,9 @@ async function LoginPost(
 
  if (token) {
   document.cookie = `token=${token}; path=/; max-age=86400; secure; samesite=strict`
+  if (typeof window !== 'undefined' && responseData.data?.user) {
+   localStorage.setItem('user', JSON.stringify(responseData.data.user))
+  }
  }
 
  // 🌟 3. Return ตัวแปรออกไปเลย ไม่ต้องสั่ง .json() ซ้ำแล้ว

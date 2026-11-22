@@ -20,6 +20,7 @@
         "official": "Official",
         "patients": "Patients",
         "reports": "Reports",
+        "users": "User Management",
         "settings": "Settings",
         "kpi": "KPI"
     },
@@ -52,6 +53,8 @@
     "register": {
         "title": "Register",
         "username": "Username",
+        "firstName": "First Name",
+        "lastName": "Last Name",
         "password": "Password",
         "email": "Email",
         "ward": "Ward / Department",

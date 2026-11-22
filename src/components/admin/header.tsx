@@ -1,10 +1,12 @@
 'use client'
 
+import { useCurrentUser } from '@/apis/auth'
 import { ThemeModeSwitch } from '@/components/theme/theme-mode-switch'
 import { useTranslationsNext } from '@/i18n/use-translate-next'
 import { Logout } from '@mui/icons-material'
 import CircleRoundedIcon from '@mui/icons-material/CircleRounded'
 import {
+ Avatar,
  Box,
  Button,
  IconButton,
@@ -18,6 +20,7 @@ import { useEffect, useState } from 'react'
 export function HeaderBar() {
  const t = useTranslationsNext('navBar')
  const router = useRouter()
+ const { user } = useCurrentUser()
  const [now, setNow] = useState(new Date())
  const [isMounted, setIsMounted] = useState(false)
 
@@ -32,10 +35,12 @@ export function HeaderBar() {
  }, [])
 
  const logout = () => {
-  // ลบ Token จาก Cookie
   document.cookie = 'token=; path=/; max-age=0;'
+  if (typeof window !== 'undefined') {
+   localStorage.removeItem('user')
+  }
 
-  router.push('/th/login') // 🌟 6. พาผู้ใช้ไปยังหน้า Login
+  router.push('/th/login')
   router.refresh()
  }
 
@@ -80,25 +85,91 @@ export function HeaderBar() {
 
    <Stack
     direction='row'
-    spacing={{ xs: 0.5, sm: 2 }} // 🌟 2. ลดช่องว่าง (Gap) ระหว่างไอคอนบนมือถือ
-    // alignItems='center'
+    spacing={{ xs: 1, sm: 1.5 }}
     sx={{ alignItems: 'center' }}
    >
     <Typography
      variant='body2'
      color='text.secondary'
-     sx={{ display: { xs: 'none', md: 'block' } }} // 🌟 3. ซ่อนเวลาบนหน้าจอมือถือ/แท็บเล็ต เพื่อป้องกันข้อความล้น
+     sx={{ display: { xs: 'none', lg: 'block' } }}
     >
      {isMounted ? dayjs(now).format('YYYY-MM-DD HH:mm:ss') : ''}
     </Typography>
     <ButtonChangeLocale />
     <ThemeModeSwitch />
 
-    <IconButton edge='end' onClick={logout}>
-     {' '}
-     {/* 🌟 4. ดัน IconButton ให้ชิดขอบพอดี */}
-     <Logout />
-    </IconButton>
+    {user && (
+     <Box
+      sx={{
+       display: 'flex',
+       alignItems: 'center',
+       gap: 1.25,
+       pl: 0.75,
+       pr: 1.5,
+       py: 0.4,
+       borderRadius: '24px',
+       bgcolor: (theme) =>
+        theme.palette.mode === 'dark'
+         ? 'rgba(255, 255, 255, 0.05)'
+         : '#F1F5F9',
+       border: '1px solid',
+       borderColor: 'divider',
+      }}
+     >
+      <Avatar
+       sx={{
+        width: 28,
+        height: 28,
+        bgcolor: '#0D9488',
+        color: '#FFFFFF',
+        fontWeight: 700,
+        fontSize: '0.8rem',
+       }}
+      >
+       {(user.firstName || user.username || 'U')[0].toUpperCase()}
+      </Avatar>
+      <Box
+       sx={{
+        display: { xs: 'none', sm: 'block' },
+        textAlign: 'left',
+        lineHeight: 1.2,
+       }}
+      >
+       <Typography
+        variant='body2'
+        sx={{
+         fontWeight: 700,
+         fontSize: '0.82rem',
+         color: 'text.primary',
+         maxWidth: 160,
+         overflow: 'hidden',
+         textOverflow: 'ellipsis',
+         whiteSpace: 'nowrap',
+        }}
+       >
+        {[user.firstName, user.lastName].filter(Boolean).join(' ') ||
+         user.username}
+       </Typography>
+       <Typography
+        variant='caption'
+        sx={{
+         color: 'text.secondary',
+         fontSize: '0.7rem',
+         display: 'block',
+        }}
+       >
+        {user.ward || 'MICU3'}{' '}
+        {user.role ? '• ' + user.role : ''}
+       </Typography>
+      </Box>
+     </Box>
+    )}
+
+    <Tooltip title='ออกจากระบบ'>
+     <IconButton edge='end' onClick={logout} sx={{ ml: 0.5 }}>
+      <Logout />
+     </IconButton>
+    </Tooltip>
    </Stack>
   </Box>
  )

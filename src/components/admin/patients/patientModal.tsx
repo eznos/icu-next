@@ -22,6 +22,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import dayjs from 'dayjs'
 import { useEffect, useMemo } from 'react'
 import {
+ CheckboxElement,
  FormContainer,
  SelectElement,
  TextFieldElement,
@@ -45,6 +46,13 @@ const statusOptions = [
  { id: 'discharged', label: 'จำหน่ายออก (Discharged)' },
 ]
 
+const dischargeReasonOptions = [
+ { id: 'transferred_ward', label: 'ย้ายไปหอผู้ป่วยสามัญ (Transferred to Ward)' },
+ { id: 'deceased', label: 'เสียชีวิตใน ICU (Deceased)' },
+ { id: 'home', label: 'อาการดีขึ้นกลับบ้าน (Discharged Home)' },
+ { id: 'refer_out', label: 'ส่งต่อโรงพยาบาลอื่น (Refer Out)' },
+]
+
 type PatientModalProps = {
  open: boolean
  onClose: () => void
@@ -64,6 +72,10 @@ type PatientFormFields = {
  hometown: string
  admissionDate: any
  status: PatientStatus
+ dischargeDate?: any
+ dischargeReason?: string
+ isReadmission48h?: boolean
+ apacheScore?: number
 }
 
 export const PatientModal = ({
@@ -94,8 +106,14 @@ export const PatientModal = ({
    hometown: '',
    admissionDate: null,
    status: 'admitted',
+   dischargeDate: null,
+   dischargeReason: 'transferred_ward',
+   isReadmission48h: false,
+   apacheScore: 0,
   },
  })
+
+ const watchedStatus = form.watch('status')
 
  const availableBedOptions = useMemo(() => {
   const occupiedBedSet = new Set(
@@ -132,6 +150,12 @@ export const PatientModal = ({
      ? dayjs(currentRecord.admissionDate)
      : null,
     status: currentRecord.status || 'admitted',
+    dischargeDate: currentRecord.dischargeDate
+     ? dayjs(currentRecord.dischargeDate)
+     : dayjs(),
+    dischargeReason: currentRecord.dischargeReason || 'transferred_ward',
+    isReadmission48h: Boolean(currentRecord.isReadmission48h),
+    apacheScore: Number(currentRecord.apacheScore) || 0,
    })
   } else if (open && !isEdit) {
    const requestedBedNum = data?.bedNumber
@@ -154,6 +178,10 @@ export const PatientModal = ({
     hometown: '',
     admissionDate: dayjs(),
     status: 'admitted',
+    dischargeDate: dayjs(),
+    dischargeReason: 'transferred_ward',
+    isReadmission48h: false,
+    apacheScore: 0,
    })
   }
  }, [open, isEdit, detailResponse, data, form, availableBedOptions])
@@ -168,7 +196,7 @@ export const PatientModal = ({
    ? dayjs(formData.admissionDate).toISOString()
    : new Date().toISOString()
 
-  const payload = {
+  const payload: any = {
    bedNumber: formData.bedNumber,
    hn: formData.hn.trim(),
    an: formData.an.trim(),
@@ -179,6 +207,18 @@ export const PatientModal = ({
    hometown: formData.hometown.trim(),
    admissionDate: formattedDate,
    status: formData.status,
+   isReadmission48h: Boolean(formData.isReadmission48h),
+   apacheScore: Number(formData.apacheScore) || 0,
+  }
+
+  if (formData.status === 'discharged') {
+   payload.dischargeDate = formData.dischargeDate
+    ? dayjs(formData.dischargeDate).toISOString()
+    : new Date().toISOString()
+   payload.dischargeReason = formData.dischargeReason || 'transferred_ward'
+  } else {
+   payload.dischargeDate = null
+   payload.dischargeReason = null
   }
 
   if (isEdit && targetId) {
@@ -437,6 +477,7 @@ export const PatientModal = ({
           name='admissionDate'
           format='DD/MM/YYYY'
           sx={{ width: '100%' }}
+          inputProps={{ size: 'small' }}
           required
          />
         </Grid>
@@ -461,6 +502,80 @@ export const PatientModal = ({
           size='small'
          />
         </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+         <Typography
+          variant='caption'
+          sx={{
+           fontWeight: 600,
+           color: 'text.secondary',
+           mb: 0.5,
+           display: 'block',
+          }}
+         >
+          คะแนน APACHE II แรกรับ (คำนวณ SMR)
+         </Typography>
+         <TextFieldElement
+          name='apacheScore'
+          placeholder='เช่น 12 (0 - 71)'
+          type='number'
+          fullWidth
+          size='small'
+         />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center', pt: 2.5 }}>
+         <CheckboxElement
+          name='isReadmission48h'
+          label='กลับเข้า ICU ซ้ำใน 48 ชม. (Readmission 48h)'
+         />
+        </Grid>
+
+        {watchedStatus === 'discharged' && (
+         <>
+          <Grid size={{ xs: 12, md: 6 }}>
+           <Typography
+            variant='caption'
+            sx={{
+             fontWeight: 600,
+             color: '#b91c1c',
+             mb: 0.5,
+             display: 'block',
+            }}
+           >
+            วันที่จำหน่ายผู้ป่วย (Discharge Date) *
+           </Typography>
+           <DatePickerElement
+            name='dischargeDate'
+            format='DD/MM/YYYY'
+            sx={{ width: '100%' }}
+            inputProps={{ size: 'small' }}
+            required
+           />
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }}>
+           <Typography
+            variant='caption'
+            sx={{
+             fontWeight: 600,
+             color: '#b91c1c',
+             mb: 0.5,
+             display: 'block',
+            }}
+           >
+            ผล/สาเหตุการจำหน่าย (Discharge Disposition) *
+           </Typography>
+           <SelectElement
+            name='dischargeReason'
+            options={dischargeReasonOptions}
+            fullWidth
+            required
+            size='small'
+           />
+          </Grid>
+         </>
+        )}
 
         <Grid size={{ xs: 12 }} sx={{ mt: 2 }}>
          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
@@ -495,7 +610,10 @@ export const PatientModal = ({
             fontWeight: 600,
             textTransform: 'none',
             fontSize: '0.95rem',
-            '&:hover': { borderColor: 'text.secondary', bgcolor: 'action.hover' },
+            '&:hover': {
+             borderColor: 'text.secondary',
+             bgcolor: 'action.hover',
+            },
            }}
           >
            ยกเลิก

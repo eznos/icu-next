@@ -44,13 +44,14 @@ const DEFAULT_WARDS = [
 ]
 
 export const wardService = {
- async getWardList() {
+ async getWardList(includeInactive = false) {
   const count = await Ward.countDocuments()
   if (count === 0) {
    await Ward.insertMany(DEFAULT_WARDS)
   }
 
-  const wards = await Ward.find({ isActive: true }).sort({ code: 1 }).lean()
+  const filter = includeInactive ? {} : { isActive: true }
+  const wards = await Ward.find(filter).sort({ code: 1 }).lean()
   return wards.map((w: any) => ({
    _id: w._id?.toString(),
    code: w.code,
@@ -81,5 +82,85 @@ export const wardService = {
    totalBeds: 10,
    targetMonthlyAdmissions: 18,
   }
+ },
+
+ async createWard(payload: {
+  code: string
+  name: string
+  description?: string
+  totalBeds?: number
+  targetMonthlyAdmissions?: number
+ }) {
+  const code = payload.code.toUpperCase().trim()
+  const existing = await Ward.findOne({ code })
+  if (existing) {
+   throw new Error(`รหัส Ward "${code}" มีอยู่ในระบบแล้ว`)
+  }
+
+  const ward = new Ward({
+   code,
+   name: payload.name.trim(),
+   description: payload.description?.trim() || '',
+   totalBeds: Math.max(1, Number(payload.totalBeds) || 10),
+   targetMonthlyAdmissions: Math.max(0, Number(payload.targetMonthlyAdmissions) || 18),
+   isActive: true,
+  })
+
+  await ward.save()
+  return {
+   _id: ward._id.toString(),
+   code: ward.code,
+   name: ward.name,
+   description: ward.description,
+   totalBeds: ward.totalBeds,
+   targetMonthlyAdmissions: ward.targetMonthlyAdmissions,
+   isActive: ward.isActive,
+  }
+ },
+
+ async updateWard(
+  id: string,
+  payload: {
+   name?: string
+   description?: string
+   totalBeds?: number
+   targetMonthlyAdmissions?: number
+   isActive?: boolean
+  },
+ ) {
+  const ward = await Ward.findById(id)
+  if (!ward) {
+   throw new Error('ไม่พบข้อมูล Ward ในระบบ')
+  }
+
+  if (payload.name !== undefined) ward.name = payload.name.trim()
+  if (payload.description !== undefined) ward.description = payload.description.trim()
+  if (payload.totalBeds !== undefined) ward.totalBeds = Math.max(1, Number(payload.totalBeds))
+  if (payload.targetMonthlyAdmissions !== undefined) {
+   ward.targetMonthlyAdmissions = Math.max(0, Number(payload.targetMonthlyAdmissions))
+  }
+  if (payload.isActive !== undefined) ward.isActive = payload.isActive
+
+  await ward.save()
+  return {
+   _id: ward._id.toString(),
+   code: ward.code,
+   name: ward.name,
+   description: ward.description,
+   totalBeds: ward.totalBeds,
+   targetMonthlyAdmissions: ward.targetMonthlyAdmissions,
+   isActive: ward.isActive,
+  }
+ },
+
+ async deleteWard(id: string) {
+  const ward = await Ward.findById(id)
+  if (!ward) {
+   throw new Error('ไม่พบข้อมูล Ward ในระบบ')
+  }
+
+  ward.isActive = false
+  await ward.save()
+  return { success: true }
  },
 }

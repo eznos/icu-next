@@ -13,18 +13,19 @@ export type PatientListResponse = ResponseTypeBasic<PatientType[]> & {
 }
 
 export async function getPatientList(
- params?: PatientQueryParams,
+ params?: PatientQueryParams | string,
 ): Promise<PatientListResponse> {
  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
+ const queryObj: PatientQueryParams =
+  typeof params === 'string' ? { ward: params } : params || {}
+
  const searchParams = new URLSearchParams()
- if (params) {
-  Object.entries(params).forEach(([key, value]) => {
-   if (value !== undefined && value !== '') {
-    searchParams.append(key, String(value))
-   }
-  })
- }
+ Object.entries(queryObj).forEach(([key, value]) => {
+  if (value !== undefined && value !== null && value !== '') {
+   searchParams.append(key, String(value).trim())
+  }
+ })
 
  const queryString = searchParams.toString()
  const url = `${apiBase}/api/patient${queryString ? `?${queryString}` : ''}`
@@ -46,10 +47,13 @@ export async function getPatientList(
  return response.json()
 }
 
-async function patientListFetcher([, params]: [string, PatientQueryParams | undefined]) {
+async function patientListFetcher([, params]: [
+ string,
+ (PatientQueryParams | string) | undefined,
+]) {
  return getPatientList(params)
 }
 
-export function usePatientList(params?: PatientQueryParams) {
+export function usePatientList(params?: PatientQueryParams | string) {
  return useSWR(['patients', params], patientListFetcher)
 }

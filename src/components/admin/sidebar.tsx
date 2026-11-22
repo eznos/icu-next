@@ -1,8 +1,10 @@
 'use client'
 
+import { useCurrentUser } from '@/apis/auth/me'
 import { useTranslationsNext } from '@/i18n/use-translate-next'
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
+import ManageAccountsRoundedIcon from '@mui/icons-material/ManageAccountsRounded'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 import {
@@ -24,6 +26,7 @@ const navIcons = {
  official: <PeopleAltRoundedIcon fontSize='small' />,
  patients: <PeopleAltRoundedIcon fontSize='small' />,
  reports: <DescriptionRoundedIcon fontSize='small' />,
+ users: <ManageAccountsRoundedIcon fontSize='small' />,
  settings: <SettingsRoundedIcon fontSize='small' />,
  kpi: <SettingsRoundedIcon fontSize='small' />,
 }
@@ -38,6 +41,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
  const t = useTranslationsNext('navBar')
  const x = useTranslationsNext('sidebar')
  const pathname = usePathname()
+ const { user } = useCurrentUser()
 
  const menuItems = [
   { key: 'dashboard', href: `/${locale}/dashboard` },
@@ -45,6 +49,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
   { key: 'patients', href: `/${locale}/patients` },
   { key: 'kpi', href: `/${locale}/kpi` },
   { key: 'reports', href: `/${locale}/reports` },
+  ...(user?.role === 'admin' ? [{ key: 'users', href: `/${locale}/users` }] : []),
   { key: 'settings', href: `/${locale}/settings` },
  ]
  //  console.log(pathname)

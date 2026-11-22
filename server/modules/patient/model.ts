@@ -24,6 +24,13 @@ export const PatientStatusSchema = t.Union(
  },
 )
 
+export const DischargeReasonSchema = t.Union([
+ t.Literal('transferred_ward'),
+ t.Literal('deceased'),
+ t.Literal('home'),
+ t.Literal('refer_out'),
+])
+
 export const PatientSchema = t.Object({
  _id: t.Optional(t.String({ description: 'MongoDB ObjectID' })),
  objectUuId: t.Optional(t.String({ format: 'uuid', description: 'UUID ของผู้ป่วย' })),
@@ -37,6 +44,10 @@ export const PatientSchema = t.Object({
  hometown: t.String({ description: 'ภูมิลำเนา (จังหวัด/อำเภอ)' }),
  admissionDate: t.String({ description: 'วันที่เข้ารับการรักษา' }),
  status: PatientStatusSchema,
+ dischargeDate: t.Optional(t.Union([t.String(), t.Date(), t.Null()])),
+ dischargeReason: t.Optional(t.Union([DischargeReasonSchema, t.Null()])),
+ isReadmission48h: t.Optional(t.Boolean({ default: false })),
+ apacheScore: t.Optional(t.Number({ default: 0 })),
  ward: t.Optional(t.String({ description: 'รหัสหอผู้ป่วย (Ward) เช่น MICU3' })),
  isDeleted: t.Optional(t.Boolean({ description: 'สถานะการลบข้อมูล (Soft delete)', default: false })),
  deletedAt: t.Optional(
@@ -59,6 +70,10 @@ export const CreatePatientBody = t.Object({
  hometown: t.String({ minLength: 1, description: 'ภูมิลำเนา' }),
  admissionDate: t.String({ minLength: 1, description: 'วันที่เข้ารับการรักษา' }),
  status: PatientStatusSchema,
+ dischargeDate: t.Optional(t.Union([t.String(), t.Date(), t.Null()])),
+ dischargeReason: t.Optional(t.Union([DischargeReasonSchema, t.Null()])),
+ isReadmission48h: t.Optional(t.Boolean({ default: false })),
+ apacheScore: t.Optional(t.Number({ default: 0 })),
  ward: t.Optional(t.String({ description: 'รหัสหอผู้ป่วย (Ward)' })),
 })
 
@@ -113,6 +128,10 @@ export interface IPatientDocument extends Document {
  hometown: string
  admissionDate: Date | string
  status: 'admitted' | 'discharged'
+ dischargeDate?: Date | null
+ dischargeReason?: 'transferred_ward' | 'deceased' | 'home' | 'refer_out' | null
+ isReadmission48h?: boolean
+ apacheScore?: number
  ward: string
  isDeleted: boolean
  deletedAt?: Date | null
@@ -182,6 +201,23 @@ export const PatientSchemaX: Schema = new Schema(
    enum: ['admitted', 'discharged'],
    trim: true,
    index: true,
+  },
+  dischargeDate: {
+   type: Date,
+   default: null,
+  },
+  dischargeReason: {
+   type: String,
+   enum: ['transferred_ward', 'deceased', 'home', 'refer_out', null],
+   default: null,
+  },
+  isReadmission48h: {
+   type: Boolean,
+   default: false,
+  },
+  apacheScore: {
+   type: Number,
+   default: 0,
   },
   ward: {
    type: String,

@@ -1,9 +1,14 @@
 'use client'
 
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded'
 import SingleBedRoundedIcon from '@mui/icons-material/SingleBedRounded'
-import { Box, Card, CardContent, Typography } from '@mui/material'
+import { Box, Button, Card, CardContent, Chip, Typography } from '@mui/material'
 import { useParams, useRouter } from 'next/navigation'
+import { useState } from 'react'
+import dayjs from 'dayjs'
+import { useTodayAssessments } from '@/apis/assessment'
+import { BedPatientTarget, DailyAssessmentModal } from './dailyAssessmentModal'
 
 export type BedPatientInfo = {
  _id?: string
@@ -30,10 +35,26 @@ export type BedMappingProps = {
  onBedClick?: (bed: BedItem) => void
 }
 
-export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMappingProps) => {
+export const BedMapping = ({
+ wardName = 'MICU3',
+ beds = [],
+ onBedClick,
+}: BedMappingProps) => {
  const router = useRouter()
  const { locale } = useParams<{ locale: string }>()
  const targetLocale = locale || 'th'
+
+ const { data: todayAssessments, mutate: mutateTodayAssessments } =
+  useTodayAssessments(wardName)
+ const [assessmentTarget, setAssessmentTarget] =
+  useState<BedPatientTarget | null>(null)
+
+ const assessmentMap = new Map<string, any[]>()
+ for (const a of todayAssessments?.data || []) {
+  const list = assessmentMap.get(a.an) || []
+  list.push(a)
+  assessmentMap.set(a.an, list)
+ }
 
  const handleCardClick = (bed: BedItem) => {
   if (onBedClick) {
@@ -63,11 +84,18 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
     <Box sx={{ mb: 2.5 }}>
      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
       <SingleBedRoundedIcon sx={{ color: '#047857', fontSize: 24 }} />
-      <Typography variant='subtitle1' sx={{ fontWeight: 700, color: '#1E293B' }}>
-       แผนผังสถานะเตียงในหอผู้ป่วย {wardName} (Bed Mapping 1-{beds.length || 10})
+      <Typography
+       variant='subtitle1'
+       sx={{ fontWeight: 700, color: '#1E293B' }}
+      >
+       แผนผังสถานะเตียงในหอผู้ป่วย {wardName} (Bed Mapping 1-{beds.length || 10}
+       )
       </Typography>
      </Box>
-     <Typography variant='body2' sx={{ color: '#64748B', mt: 0.5, fontSize: '0.85rem' }}>
+     <Typography
+      variant='body2'
+      sx={{ color: '#64748B', mt: 0.5, fontSize: '0.85rem' }}
+     >
       คลิกเตียงว่างสีเขียวเพื่อกรอกข้อมูลผู้รับผู้ป่วยเข้าเตียงได้โดยตรงทันที
      </Typography>
     </Box>
@@ -79,13 +107,16 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
        xs: 'repeat(1, 1fr)',
        sm: 'repeat(2, 1fr)',
        md: 'repeat(3, 1fr)',
-       lg: 'repeat(5, 1fr)',
+       lg: 'repeat(4, 1fr)',
       },
       gap: 2,
      }}
     >
      {beds.map((bed) => {
       const isOccupied = bed.status === 'Occupied'
+      const checks = bed.patient?.an ? assessmentMap.get(bed.patient.an) || [] : []
+      const checkCount = checks.length
+      const todayData = checks[0] || null
 
       return (
        <Box
@@ -112,7 +143,13 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
          },
         }}
        >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box
+         sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+         }}
+        >
          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <SingleBedRoundedIcon
            sx={{
@@ -149,7 +186,7 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
         </Box>
 
         {isOccupied ? (
-         <Box sx={{ my: 1 }}>
+         <Box sx={{ my: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Typography
            variant='body2'
            sx={{
@@ -170,7 +207,6 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
             color: '#475569',
             fontSize: '0.72rem',
             display: 'block',
-            mt: 0.25,
            }}
           >
            HN: {bed.patient?.hn || '-'} | AN: {bed.patient?.an || '-'}
@@ -189,6 +225,81 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
           >
            Dx: {bed.patient?.diagnosis || '-'}
           </Typography>
+
+          <Typography
+           variant='caption'
+           sx={{
+            fontWeight: 700,
+            fontSize: '0.72rem',
+            color: checkCount > 0 ? '#047857' : '#DC2626',
+            mt: 0.25,
+            display: 'block',
+           }}
+          >
+           {checkCount > 0
+            ? `✓ ตรวจแล้ว ${checkCount} ครั้ง (ล่าสุด ${dayjs(todayData?.recordDate).format('HH:mm น.')})`
+            : '⚠ ยังไม่ได้ตรวจประเมินวันนี้'}
+          </Typography>
+
+          {todayData && (
+           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 0.5 }}>
+            {todayData.hasVentilator && (
+             <Chip
+              label='Vent'
+              size='small'
+              sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#E0F2FE', color: '#0369A1' }}
+             />
+            )}
+            {todayData.hasCentralLine && (
+             <Chip
+              label='C-Line'
+              size='small'
+              sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#FEF3C7', color: '#B45309' }}
+             />
+            )}
+            {todayData.hasFoleyCatheter && (
+             <Chip
+              label='Foley'
+              size='small'
+              sx={{ height: 18, fontSize: '0.65rem', bgcolor: '#F3E8FF', color: '#7E22CE' }}
+             />
+            )}
+           </Box>
+          )}
+
+          <Button
+           size='small'
+           variant='outlined'
+           onClick={(e) => {
+            e.stopPropagation()
+            if (bed.patient) {
+             setAssessmentTarget({
+              patientId: bed.patient.objectUuId || bed.patient._id || '',
+              an: bed.patient.an,
+              hn: bed.patient.hn,
+              patientName: bed.patient.patientName,
+              bedNumber: bed.bedNumber,
+              ward: wardName,
+             })
+            }
+           }}
+           startIcon={<AssignmentTurnedInRoundedIcon sx={{ fontSize: '14px !important' }} />}
+           sx={{
+            mt: 0.5,
+            py: 0.25,
+            fontSize: '0.7rem',
+            textTransform: 'none',
+            borderRadius: '6px',
+            color: checkCount > 0 ? '#047857' : '#B91C1C',
+            borderColor: checkCount > 0 ? '#A7F3D0' : '#FECDD3',
+            bgcolor: checkCount > 0 ? '#ECFDF5' : '#FFF1F2',
+            '&:hover': {
+             bgcolor: checkCount > 0 ? '#D1FAE5' : '#FFE4E6',
+            },
+           }}
+          >
+           {checkCount > 0 ? 'ประเมินเพิ่มรอบใหม่' : 'บันทึกประเมินเตียง'}
+          </Button>
          </Box>
         ) : (
          <Box
@@ -211,6 +322,18 @@ export const BedMapping = ({ wardName = 'MICU3', beds = [], onBedClick }: BedMap
       )
      })}
     </Box>
+
+    <DailyAssessmentModal
+     open={Boolean(assessmentTarget)}
+     onClose={() => setAssessmentTarget(null)}
+     onSuccess={() => mutateTodayAssessments()}
+     patient={assessmentTarget}
+     initialData={
+      assessmentTarget
+       ? assessmentMap.get(assessmentTarget.an)?.[0] || null
+       : null
+     }
+    />
    </CardContent>
   </Card>
  )

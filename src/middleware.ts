@@ -4,37 +4,69 @@ import { routing } from './i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
-// กำหนดหน้าเว็บที่ต้อง Login ก่อนเข้าใช้งาน (Private Routes)
-const protectedRoutes = ['/dashboard', '/official', '/reports', '/settings']
+const authRoutes = ['/login', '/register']
+const adminOnlyRoutes = ['/users']
+
+function parseTokenPayload(token?: string): { role?: string; exp?: number } | null {
+ if (!token) return null
+ try {
+  const parts = token.split('.')
+  if (parts.length >= 2) {
+   const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+   const decoded = atob(base64)
+   const payload = JSON.parse(decoded)
+   if (payload.exp && Date.now() >= payload.exp * 1000) {
+    return null
+   }
+   return payload
+  }
+ } catch {
+  // Ignore parsing error
+ }
+ return { role: 'user' }
+}
 
 export default function middleware(req: NextRequest) {
  const { pathname } = req.nextUrl
 
- // 1. ตรวจสอบ Token จาก Cookie
- const token = req.cookies.get('token')?.value
-
- // 2. ดึง locale ปัจจุบันจาก path (เช่น /th/dashboard -> 'th')
  const pathnameLocale = routing.locales.find(
   (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
  )
- const currentLocale = pathnameLocale || routing.defaultLocale
+ const cookieLocale = req.cookies.get('NEXT_LOCALE')?.value
+ const currentLocale =
+  pathnameLocale ||
+  (routing.locales.includes(cookieLocale as any) ? cookieLocale : null) ||
+  routing.defaultLocale
 
- // 3. ตัด prefix ภาษาออก เพื่อเช็คว่า path ปัจจุบันเป็น Protected Route หรือไม่
  const pathWithoutLocale =
   pathname.replace(new RegExp(`^/(${routing.locales.join('|')})`), '') || '/'
- const isProtectedRoute = protectedRoutes.some((route) =>
+
+ const token = req.cookies.get('token')?.value
+ const payload = parseTokenPayload(token)
+ const isAuthenticated = Boolean(payload)
+
+ const isAuthRoute = authRoutes.some((route) =>
   pathWithoutLocale.startsWith(route),
  )
 
- // 4. ถ้าเป็นหน้า Protected แล้วไม่มี Token -> Redirect ไปหน้า Login
- if (isProtectedRoute && !token) {
+ if (!isAuthenticated && !isAuthRoute) {
   const loginUrl = new URL(`/${currentLocale}/login`, req.url)
-  return NextResponse.redirect(loginUrl)
+  const response = NextResponse.redirect(loginUrl)
+  if (token) {
+   response.cookies.delete('token')
+  }
+  return response
  }
 
- // 🌟 5. (เพิ่มใหม่) ถ้ามี Token แล้ว แต่พยายามเข้าหน้า Login -> Redirect ไป Dashboard
- const isLoginRoute = pathWithoutLocale.startsWith('/login')
- if (isLoginRoute && token) {
+ if (isAuthenticated && isAuthRoute) {
+  const dashboardUrl = new URL(`/${currentLocale}/dashboard`, req.url)
+  return NextResponse.redirect(dashboardUrl)
+ }
+
+ const isAdminRoute = adminOnlyRoutes.some((route) =>
+  pathWithoutLocale.startsWith(route),
+ )
+ if (isAuthenticated && isAdminRoute && payload?.role !== 'admin') {
   const dashboardUrl = new URL(`/${currentLocale}/dashboard`, req.url)
   return NextResponse.redirect(dashboardUrl)
  }
@@ -43,5 +75,5 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
- matcher: ['/', '/(th|en)/:path*'],
+ matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 }

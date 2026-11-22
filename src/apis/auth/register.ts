@@ -3,6 +3,8 @@ import useSWRMutation from 'swr/mutation'
 
 export type RegisterPayload = {
  username: string
+ firstName?: string
+ lastName?: string
  email: string
  password: string
  role?: 'user' | 'admin'

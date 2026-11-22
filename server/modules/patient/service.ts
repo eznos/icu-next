@@ -33,6 +33,10 @@ export abstract class patientService {
     hn: body.hn.trim(),
     objectUuId,
     admissionDate: new Date(body.admissionDate),
+    dischargeDate: body.dischargeDate ? new Date(body.dischargeDate) : null,
+    dischargeReason: body.dischargeReason || null,
+    isReadmission48h: Boolean(body.isReadmission48h),
+    apacheScore: Number(body.apacheScore) || 0,
    })
 
    await newPatient.save()
@@ -103,6 +107,9 @@ export abstract class patientService {
     admissionDate: patient.admissionDate
      ? new Date(patient.admissionDate).toISOString()
      : '',
+    dischargeDate: patient.dischargeDate
+     ? new Date(patient.dischargeDate).toISOString()
+     : null,
     createdAt: patient.createdAt
      ? new Date(patient.createdAt).toISOString()
      : undefined,
@@ -154,6 +161,7 @@ export abstract class patientService {
   try {
    const andConditions: any[] = [{ isDeleted: { $ne: true } }]
 
+   const requestedWard = query?.ward?.trim()
    if (currentUser && currentUser.role !== 'admin') {
     const targetWard = currentUser.ward || 'MICU3'
     if (targetWard === 'MICU3') {
@@ -168,8 +176,19 @@ export abstract class patientService {
     } else {
      andConditions.push({ ward: targetWard })
     }
-   } else if (query?.ward) {
-    andConditions.push({ ward: query.ward })
+   } else if (requestedWard && requestedWard.toLowerCase() !== 'all') {
+    if (requestedWard === 'MICU3') {
+     andConditions.push({
+      $or: [
+       { ward: 'MICU3' },
+       { ward: { $exists: false } },
+       { ward: null },
+       { ward: '' },
+      ],
+     })
+    } else {
+     andConditions.push({ ward: requestedWard })
+    }
    }
 
    if (search) {
@@ -210,6 +229,12 @@ export abstract class patientService {
     admissionDate: doc.admissionDate
      ? new Date(doc.admissionDate).toISOString()
      : '',
+    dischargeDate: doc.dischargeDate
+     ? new Date(doc.dischargeDate).toISOString()
+     : null,
+    dischargeReason: doc.dischargeReason || null,
+    isReadmission48h: Boolean(doc.isReadmission48h),
+    apacheScore: Number(doc.apacheScore) || 0,
     createdAt: doc.createdAt
      ? new Date(doc.createdAt).toISOString()
      : undefined,
@@ -300,6 +325,19 @@ export abstract class patientService {
    if (body.hn) updatePayload.hn = body.hn.trim()
    if (body.admissionDate) {
     updatePayload.admissionDate = new Date(body.admissionDate)
+   }
+   if (body.status === 'discharged') {
+    updatePayload.dischargeDate = body.dischargeDate ? new Date(body.dischargeDate) : new Date()
+    if (body.dischargeReason) updatePayload.dischargeReason = body.dischargeReason
+   } else if (body.status === 'admitted') {
+    updatePayload.dischargeDate = null
+    updatePayload.dischargeReason = null
+   }
+   if (typeof body.isReadmission48h === 'boolean') {
+    updatePayload.isReadmission48h = body.isReadmission48h
+   }
+   if (typeof body.apacheScore === 'number') {
+    updatePayload.apacheScore = body.apacheScore
    }
 
    await Patient.updateOne(query, { $set: updatePayload })

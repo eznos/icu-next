@@ -74,7 +74,12 @@ type OfficialModalProps = {
  open: boolean
  onClose: () => void
  onSuccess?: () => void
- data?: { objectUuId?: string; id?: string; _id?: string; [key: string]: any } | null
+ data?: {
+  objectUuId?: string
+  id?: string
+  _id?: string
+  [key: string]: any
+ } | null
 }
 
 export const OfficialModal = ({
@@ -88,7 +93,8 @@ export const OfficialModal = ({
 
  const { mutate: createMutate, isMutating: isCreating } = useOfficialCreate()
  const { mutate: updateMutate, isMutating: isUpdating } = useOfficialUpdate()
- const { data: detailResponse, isLoading: isLoadingDetail } = useOfficialDetail(targetId)
+ const { data: detailResponse, isLoading: isLoadingDetail } =
+  useOfficialDetail(targetId)
  const { showSnackbar } = useSnackBarNotification()
 
  const form = useForm<any>({
@@ -118,7 +124,9 @@ export const OfficialModal = ({
     position: detail.position || 'พยาบาลวิชาชีพ',
     competencyLevel: detail.competencyLevel || 'Competent',
     licenseNumber: detail.licenseNumber || '',
-    licenseExpiryDate: detail.licenseExpiryDate ? dayjs(detail.licenseExpiryDate) : null,
+    licenseExpiryDate: detail.licenseExpiryDate
+     ? dayjs(detail.licenseExpiryDate)
+     : null,
     phoneNumber: detail.phoneNumber || '',
     licenseDocumentUrl: detail.licenseDocumentUrl || '',
    })
@@ -126,7 +134,11 @@ export const OfficialModal = ({
    if (detail.licenseDocumentUrl) {
     setDocumentUrl(detail.licenseDocumentUrl)
     const urlParts = detail.licenseDocumentUrl.split('/')
-    setFileName(decodeURIComponent(urlParts[urlParts.length - 1] || 'license_document.pdf'))
+    setFileName(
+     decodeURIComponent(
+      urlParts[urlParts.length - 1] || 'license_document.pdf',
+     ),
+    )
    }
   } else if (open && !isEdit) {
    form.reset({
@@ -172,7 +184,10 @@ export const OfficialModal = ({
    ...formData,
    age: Number(formData.age),
    licenseExpiryDate: formattedExpiry,
-   licenseDocumentUrl: formData.licenseDocumentUrl || documentUrl || 'https://example.com/docs/license_123.pdf',
+   licenseDocumentUrl:
+    formData.licenseDocumentUrl ||
+    documentUrl ||
+    'https://example.com/docs/license_123.pdf',
   }
 
   if (isEdit && targetId) {
@@ -197,7 +212,10 @@ export const OfficialModal = ({
      handleClose()
     },
     onError: (error: any) => {
-     showSnackbar(error.message || 'เกิดข้อผิดพลาดในการลงทะเบียนบุคลากร', 'error')
+     showSnackbar(
+      error.message || 'เกิดข้อผิดพลาดในการลงทะเบียนบุคลากร',
+      'error',
+     )
     },
    })
   }
@@ -228,7 +246,14 @@ export const OfficialModal = ({
 
      <DialogContent sx={{ pt: '8px !important' }}>
       {isEdit && isLoadingDetail ? (
-       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+       <Box
+        sx={{
+         display: 'flex',
+         justifyContent: 'center',
+         alignItems: 'center',
+         py: 8,
+        }}
+       >
         <CircularProgress size={32} sx={{ color: '#0da176' }} />
        </Box>
       ) : (
@@ -306,6 +331,7 @@ export const OfficialModal = ({
           format='DD/MM/YYYY'
           sx={{ width: '100%' }}
           required
+          inputProps={{ size: 'small' }}
          />
         </Grid>
 
@@ -329,7 +355,14 @@ export const OfficialModal = ({
            </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <Box
+           sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap',
+           }}
+          >
            <Button
             variant='contained'
             component='label'
@@ -378,7 +411,8 @@ export const OfficialModal = ({
           </Box>
 
           <Typography variant='caption' color='text.disabled'>
-           * เพื่อรองรับการทำงานแบบ Single-File แฟ้มเอกสารจะถูกบันทึกเชิงจำลองภายในแอปพลิเคชันโดยอัตโนมัติ
+           * เพื่อรองรับการทำงานแบบ Single-File
+           แฟ้มเอกสารจะถูกบันทึกเชิงจำลองภายในแอปพลิเคชันโดยอัตโนมัติ
           </Typography>
          </UploadBox>
         </Grid>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCurrentUser } from '@/apis/auth'
 import { usePatientList } from '@/apis/patients'
 import {
  DeletePatientModal,
@@ -19,7 +20,7 @@ function PatientsContent() {
  const router = useRouter()
  const { locale } = useParams<{ locale: string }>()
  const searchParams = useSearchParams()
-
+ const { user } = useCurrentUser()
  const paramId = searchParams.get('id')
  const paramAction = searchParams.get('action')
  const paramBed = searchParams.get('bed')
@@ -43,6 +44,7 @@ function PatientsContent() {
   page: 1,
   sortBy: 'admissionDate',
   order: 'desc',
+  ward: user?.ward,
  })
 
  const currentParamKey = paramAction
@@ -77,7 +79,14 @@ function PatientsContent() {
     openPatientModal({ objectUuId: paramId } as PatientType)
    }
   }
- }, [currentParamKey, paramAction, paramId, paramBed, data?.data, openPatientModal])
+ }, [
+  currentParamKey,
+  paramAction,
+  paramId,
+  paramBed,
+  data?.data,
+  openPatientModal,
+ ])
 
  const handleClosePatientModal = () => {
   closePatientModal()

@@ -139,6 +139,8 @@ type TableListProps<T extends Record<string, unknown>> = {
  title?: ReactNode
  /** Whether to hide the search input field. Default: false */
  hideSearch?: boolean
+ /** Optional tabs rendered at the top of the table card */
+ tabs?: ReactNode
 }
 
 /**
@@ -336,6 +338,7 @@ export function TableList<T extends Record<string, unknown>>({
  title,
  hideSearch = false,
  searchKeys = [],
+ tabs,
 }: TableListProps<T>) {
  const theme = useTheme()
 
@@ -385,6 +388,9 @@ export function TableList<T extends Record<string, unknown>>({
   <Box
    sx={{
     ...sx,
+    width: '100%',
+    minWidth: 0,
+    maxWidth: '100%',
     '& .MuiTableCell-root': {
      borderBottom: '1px solid',
      borderColor: 'divider',
@@ -459,8 +465,10 @@ export function TableList<T extends Record<string, unknown>>({
    <Card
     variant='outlined'
     sx={{
-     p: 1,
+     p: tabs ? 0 : 1,
      borderRadius: 2,
+     width: '100%',
+     maxWidth: '100%',
      // height: '100%',
      display: 'flex',
      flexDirection: 'column',
@@ -468,9 +476,30 @@ export function TableList<T extends Record<string, unknown>>({
      overflow: 'hidden',
     }}
    >
+    {tabs && (
+     <Box
+      sx={{
+       borderBottom: '1px solid',
+       borderColor: 'divider',
+       bgcolor: 'background.paper',
+       px: { xs: 1, sm: 2 },
+      }}
+     >
+      {tabs}
+     </Box>
+    )}
     <TableContainer
-     sx={{ overflowX: 'auto', maxHeight: { xs: 400, md: 600 } }}
      {...tableContainerProps}
+     sx={[
+      {
+       overflowX: 'auto',
+       width: '100%',
+       maxWidth: '100%',
+      },
+      ...(Array.isArray(tableContainerProps?.sx)
+       ? tableContainerProps.sx
+       : [tableContainerProps?.sx]),
+     ]}
     >
      <Box sx={{ position: 'relative', height: '100%' }}>
       <Table sx={{ minWidth: 350 }} aria-label='data table' stickyHeader>

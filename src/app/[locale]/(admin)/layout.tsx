@@ -36,7 +36,8 @@ export default function AdminLayout({ children }: ResponsiveAdminLayoutProps) {
      flexGrow: 1,
      display: 'flex',
      flexDirection: 'column',
-     width: { md: `calc(100% - 280px)` },
+     minWidth: 0,
+     width: { xs: '100%', md: `calc(100% - 280px)` },
     }}
    >
     {/* คลุม HeaderBar เดิม และเพิ่มปุ่ม Hamburger สำหรับหน้าจอมือถือ */}
@@ -65,8 +66,10 @@ export default function AdminLayout({ children }: ResponsiveAdminLayoutProps) {
     <Box
      component='main'
      sx={{
-      p: 3,
+      p: { xs: 1.5, sm: 3 },
       flexGrow: 1,
+      minWidth: 0,
+      width: '100%',
       maxHeight: 'calc(100vh - 64px)',
       overflowY: 'auto',
      }}

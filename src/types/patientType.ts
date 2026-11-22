@@ -1,7 +1,8 @@
 export type AdmissionType = 'admit' | 'transfer' | 'refer'
 export type PatientStatus = 'admitted' | 'discharged'
+export type DischargeReason = 'transferred_ward' | 'deceased' | 'home' | 'refer_out'
 
- export type PatientType = {
+export type PatientType = {
  _id?: string
  objectUuId?: string
  bedNumber: string
@@ -14,6 +15,10 @@ export type PatientStatus = 'admitted' | 'discharged'
  hometown: string
  admissionDate: string
  status: PatientStatus
+ dischargeDate?: string | null
+ dischargeReason?: DischargeReason | null
+ isReadmission48h?: boolean
+ apacheScore?: number
  ward?: string
  isDeleted?: boolean
  deletedAt?: string | null
@@ -32,6 +37,10 @@ export type CreatePatientPayload = {
  hometown: string
  admissionDate: string
  status: PatientStatus
+ dischargeDate?: string | null
+ dischargeReason?: DischargeReason | null
+ isReadmission48h?: boolean
+ apacheScore?: number
  ward?: string
 }
 

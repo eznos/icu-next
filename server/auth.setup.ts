@@ -4,6 +4,9 @@ import { Elysia } from 'elysia'
 
 export type CurrentUser = {
  id: string
+ username?: string
+ firstName?: string
+ lastName?: string
  role: 'user' | 'admin'
  ward: string
 }

@@ -74,7 +74,7 @@ export const PatientTableList = ({
 
  const filteredData = statusFilter
   ? (data || []).filter((item) => item.status === statusFilter)
-  : (data || [])
+  : data || []
 
  const columns: Column<PatientType>[] = [
   {
@@ -95,8 +95,7 @@ export const PatientTableList = ({
       justifyContent: 'center',
       fontWeight: 700,
       fontSize: '0.875rem',
-      color: (theme) =>
-       theme.palette.mode === 'dark' ? '#34D399' : '#047857',
+      color: (theme) => (theme.palette.mode === 'dark' ? '#34D399' : '#047857'),
       bgcolor: (theme) =>
        theme.palette.mode === 'dark' ? 'rgba(16, 185, 129, 0.12)' : '#ECFDF5',
      }}
@@ -111,10 +110,16 @@ export const PatientTableList = ({
    width: 220,
    renderCell: (row) => (
     <Box>
-     <Typography variant='body2' sx={{ fontWeight: 700, color: 'text.primary' }}>
+     <Typography
+      variant='body2'
+      sx={{ fontWeight: 700, color: 'text.primary' }}
+     >
       {row.patientName}
      </Typography>
-     <Typography variant='caption' sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}>
+     <Typography
+      variant='caption'
+      sx={{ color: 'text.secondary', display: 'block', mt: 0.25 }}
+     >
       HN: {row.hn} | AN: {row.an}
      </Typography>
     </Box>
@@ -136,7 +141,10 @@ export const PatientTableList = ({
    width: 240,
    renderCell: (row) => (
     <Box>
-     <Typography variant='body2' sx={{ fontWeight: 700, color: 'text.primary' }}>
+     <Typography
+      variant='body2'
+      sx={{ fontWeight: 700, color: 'text.primary' }}
+     >
       {row.diagnosis}
      </Typography>
      <Typography
@@ -159,16 +167,15 @@ export const PatientTableList = ({
    label: 'วันที่ ADMIT / ประเภท',
    width: 170,
    renderCell: (row) => {
-    const badge =
-     admissionTypeBadgeConfig[row.admissionType] || {
-      label: row.admissionType,
-      bg: (theme: any) =>
-       theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
-      color: (theme: any) =>
-       theme.palette.mode === 'dark' ? '#94A3B8' : '#475569',
-      border: (theme: any) =>
-       theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
-     }
+    const badge = admissionTypeBadgeConfig[row.admissionType] || {
+     label: row.admissionType,
+     bg: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#F1F5F9',
+     color: (theme: any) =>
+      theme.palette.mode === 'dark' ? '#94A3B8' : '#475569',
+     border: (theme: any) =>
+      theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+    }
     const formattedDate = row.admissionDate
      ? dayjs(row.admissionDate).format('YYYY-MM-DD')
      : '-'
@@ -261,9 +268,7 @@ export const PatientTableList = ({
        '&:hover': {
         color: '#0da176',
         bgcolor: (theme) =>
-         theme.palette.mode === 'dark'
-          ? 'rgba(20, 184, 166, 0.1)'
-          : '#F1F5F9',
+         theme.palette.mode === 'dark' ? 'rgba(20, 184, 166, 0.1)' : '#F1F5F9',
        },
       }}
      >
@@ -277,9 +282,7 @@ export const PatientTableList = ({
        '&:hover': {
         color: '#DC2626',
         bgcolor: (theme) =>
-         theme.palette.mode === 'dark'
-          ? 'rgba(220, 38, 38, 0.1)'
-          : '#FEF2F2',
+         theme.palette.mode === 'dark' ? 'rgba(220, 38, 38, 0.1)' : '#FEF2F2',
        },
       }}
      >
@@ -298,7 +301,14 @@ export const PatientTableList = ({
    pageSize={20}
    loading={isLoading}
    searchPlaceholder='ค้นหา HN, AN, หรือชื่อผู้ป่วย...'
-   searchKeys={['patientName', 'hn', 'an', 'diagnosis', 'attendingDoctor', 'hometown']}
+   searchKeys={[
+    'patientName',
+    'hn',
+    'an',
+    'diagnosis',
+    'attendingDoctor',
+    'hometown',
+   ]}
    title={
     <Typography
      variant='subtitle1'

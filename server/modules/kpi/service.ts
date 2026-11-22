@@ -2,14 +2,9 @@ import crypto from 'crypto'
 import dayjs from 'dayjs'
 import { status } from 'elysia'
 import { Patient } from '../patient/model'
+import { DailyAssessment } from '../assessment/model'
 import { wardService } from '../ward/service'
-import {
- CreateKpiType,
- IKpi,
- IKpiItem,
- Kpi,
- UpdateKpiType,
-} from './model'
+import { CreateKpiType, IKpi, IKpiItem, Kpi, UpdateKpiType } from './model'
 
 function processKpiItems(items: IKpiItem[]): IKpiItem[] {
  return items.map((item) => {
@@ -83,7 +78,10 @@ function formatKpiDoc(doc: any) {
  }
 }
 
-async function calculateLiveKpi(targetWard: string = 'MICU3', yearBe: number = 2569) {
+async function calculateLiveKpi(
+ targetWard: string = 'MICU3',
+ yearBe: number = 2569,
+) {
  const wardConfig = await wardService.getWardByCode(targetWard)
  const totalBeds = wardConfig.totalBeds ?? 10
 
@@ -99,111 +97,336 @@ async function calculateLiveKpi(targetWard: string = 'MICU3', yearBe: number = 2
   wardQuery.ward = targetWard
  }
 
- const allWardPatients = await Patient.find(wardQuery).lean()
- const activePatients = allWardPatients.filter((p: any) => p.status === 'admitted')
+ const [allWardPatients, dailyAssessments] = await Promise.all([
+  Patient.find(wardQuery).lean(),
+  DailyAssessment.find({ ward: targetWard.toUpperCase() }).lean(),
+ ])
+
+ const activePatients = allWardPatients.filter(
+  (p: any) => p.status === 'admitted',
+ )
+ const dischargedPatients = allWardPatients.filter(
+  (p: any) => p.status === 'discharged',
+ )
  const totalPatients = allWardPatients.length
  const activePatientsCount = activePatients.length
 
- // 1. คำนวณวันนอนสะสม (Patient-Days)
+ // 1. วันนอนสะสม (Patient-Days)
  let totalPatientDays = 0
  for (const p of allWardPatients) {
   const start = p.admissionDate ? dayjs(p.admissionDate) : dayjs(p.createdAt)
-  const end = p.status === 'admitted' ? dayjs() : dayjs(p.updatedAt || p.createdAt)
+  const end = p.dischargeDate ? dayjs(p.dischargeDate) : dayjs()
   const diffDays = Math.max(1, end.diff(start, 'day') + 1)
   totalPatientDays += diffDays
  }
  if (totalPatientDays === 0) totalPatientDays = Math.max(1, totalPatients * 5)
 
- // 2. กลุ่มเสี่ยงระบบทางเดินหายใจ (Respiratory)
- const respiratoryPatients = allWardPatients.filter((p: any) =>
-  /Respiratory|Pneumonia|COPD|Lung|Sepsis|Shock/i.test(p.diagnosis || ''),
+ // 2. Device-Days จาก Daily Assessment (นับ 1 คนต่อ 1 วัน = 1 Device-Day ตามเกณฑ์ CDC / NHSN)
+ const ventPatientDays = new Set(
+  dailyAssessments
+   .filter((d: any) => d.hasVentilator)
+   .map((d: any) => `${d.an}_${dayjs(d.recordDate).format('YYYY-MM-DD')}`),
+ ).size
+
+ const centralLinePatientDays = new Set(
+  dailyAssessments
+   .filter((d: any) => d.hasCentralLine)
+   .map((d: any) => `${d.an}_${dayjs(d.recordDate).format('YYYY-MM-DD')}`),
+ ).size
+
+ const catheterPatientDays = new Set(
+  dailyAssessments
+   .filter((d: any) => d.hasFoleyCatheter)
+   .map((d: any) => `${d.an}_${dayjs(d.recordDate).format('YYYY-MM-DD')}`),
+ ).size
+
+ const ventilatorDays =
+  ventPatientDays > 0
+   ? ventPatientDays
+   : Math.max(1, Math.round(totalPatientDays * 0.6))
+
+ const centralLineDays =
+  centralLinePatientDays > 0
+   ? centralLinePatientDays
+   : Math.max(1, Math.round(totalPatientDays * 0.5))
+
+ const catheterDays =
+  catheterPatientDays > 0
+   ? catheterPatientDays
+   : Math.max(1, Math.round(totalPatientDays * 0.7))
+
+ // 3. นับจำนวนการเกิดเหตุการณ์ (Events)
+ const vapCount = dailyAssessments.filter((d: any) => d.hasVap).length
+ const clabsiCount = dailyAssessments.filter((d: any) => d.hasClabsi).length
+ const cautiCount = dailyAssessments.filter((d: any) => d.hasCauti).length
+ const unplannedExtubations = dailyAssessments.reduce(
+  (sum: number, d: any) => sum + (Number(d.unplannedExtubation) || 0),
+  0,
+ )
+ const pressureUlcerCases = dailyAssessments.filter(
+  (d: any) => d.pressureInjuryStage && d.pressureInjuryStage !== 'none',
+ ).length
+ const medErrorCases = dailyAssessments.reduce(
+  (sum: number, d: any) => sum + (Number(d.medicationErrorGradeEUp) || 0),
+  0,
  )
 
- let estimatedVentilatorDays = 0
- for (const p of respiratoryPatients) {
+ // 4. คำนวณ Utilization & Flow KPIs
+ const bedOccupancyPercent =
+  totalBeds > 0
+   ? Math.min(100, Math.round((activePatientsCount / totalBeds) * 100))
+   : 0
+
+ let totalDischargedDays = 0
+ for (const p of dischargedPatients) {
   const start = p.admissionDate ? dayjs(p.admissionDate) : dayjs(p.createdAt)
-  const end = p.status === 'admitted' ? dayjs() : dayjs(p.updatedAt || p.createdAt)
-  estimatedVentilatorDays += Math.max(1, end.diff(start, 'day') + 1)
+  const end = p.dischargeDate ? dayjs(p.dischargeDate) : dayjs(p.updatedAt)
+  totalDischargedDays += Math.max(1, end.diff(start, 'day') + 1)
  }
- if (estimatedVentilatorDays === 0) {
-  estimatedVentilatorDays = Math.max(1, Math.round(totalPatientDays * 0.6))
+ const alos =
+  dischargedPatients.length > 0
+   ? Number((totalDischargedDays / dischargedPatients.length).toFixed(1))
+   : Number((totalPatientDays / Math.max(1, totalPatients)).toFixed(1))
+
+ const readmittedCount = allWardPatients.filter(
+  (p: any) => p.isReadmission48h,
+ ).length
+ const wardTransfers = dischargedPatients.filter(
+  (p: any) => p.dischargeReason === 'transferred_ward',
+ ).length
+ const readmissionRate =
+  wardTransfers > 0
+   ? Number(((readmittedCount / wardTransfers) * 100).toFixed(1))
+   : readmittedCount > 0
+     ? Number(
+        (
+         (readmittedCount / Math.max(1, dischargedPatients.length)) *
+         100
+        ).toFixed(1),
+       )
+     : 0
+
+ // 5. คำนวณ Clinical Outcomes
+ const deceasedCount = dischargedPatients.filter(
+  (p: any) => p.dischargeReason === 'deceased',
+ ).length
+ const mortalityRate =
+  dischargedPatients.length > 0
+   ? Number(((deceasedCount / dischargedPatients.length) * 100).toFixed(1))
+   : 0
+
+ let totalExpectedDeaths = 0
+ for (const p of allWardPatients) {
+  const score = Number(p.apacheScore) || 12
+  const expectedRisk = Math.min(
+   0.95,
+   Math.max(0.02, 1 / (1 + Math.exp(-(-3.5 + score * 0.15)))),
+  )
+  totalExpectedDeaths += expectedRisk
  }
+ const smr =
+  totalExpectedDeaths > 0
+   ? Number((deceasedCount / totalExpectedDeaths).toFixed(2))
+   : 0.85
 
- // เคสปอดอักเสบติดเชื้อ VAP
- const vapPatients = allWardPatients.filter((p: any) =>
-  /Pneumonia|VAP/i.test(p.diagnosis || ''),
+ // 6. คำนวณ Device & Safety Rates
+ const vapRate = Number(((vapCount / ventilatorDays) * 1000).toFixed(1))
+ const clabsiRate = Number(((clabsiCount / centralLineDays) * 1000).toFixed(1))
+ const cautiRate = Number(((cautiCount / catheterDays) * 1000).toFixed(1))
+ const unplannedExtubationRate = Number(
+  ((unplannedExtubations / ventilatorDays) * 1000).toFixed(1),
  )
- const vapCount = vapPatients.length
- const calculatedVapRate = Number(
-  ((vapCount / estimatedVentilatorDays) * 1000).toFixed(1),
+ const pressureInjuryRate =
+  totalPatients > 0
+   ? Number(((pressureUlcerCases / totalPatients) * 100).toFixed(2))
+   : 0
+ const medErrorRate = Number(
+  ((medErrorCases / totalPatientDays) * 1000).toFixed(2),
  )
- const vapRate = calculatedVapRate > 0 ? calculatedVapRate : 1.1
-
- // 3. แผลกดทับ (Pressure Injury)
- const pressurePatients = allWardPatients.filter((p: any) =>
-  /Decubitus|Pressure|Ulcer|Bedsore/i.test(p.diagnosis || ''),
- )
- const pressureRate = totalPatients > 0
-  ? Number(((pressurePatients.length / totalPatients) * 100).toFixed(2))
-  : 0.05
-
- // 4. Medication Error (HAD)
- const medErrorCount = 0
-
- const bedOccupancyPercent = totalBeds > 0
-  ? Math.min(100, Math.round((activePatientsCount / totalBeds) * 100))
-  : 0
 
  const stats = {
   totalPatients,
   activePatients: activePatientsCount,
   totalPatientDays,
-  estimatedVentilatorDays,
+  estimatedVentilatorDays: ventilatorDays,
   bedOccupancyPercent,
   evaluationYearBe: yearBe,
  }
 
  const items = [
   {
+   code: 'BED_OCCUPANCY',
+   tag: 'การบริหารเตียง',
+   title: '1. อัตราการครองเตียง (Bed Occupancy Rate)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: 80% - 85%',
+   targetValue: 85,
+   actualValue: bedOccupancyPercent,
+   unit: `${bedOccupancyPercent}%`,
+   progressPercent: Math.min(100, bedOccupancyPercent),
+   isPassed: bedOccupancyPercent <= 90,
+   statusText:
+    bedOccupancyPercent <= 90
+     ? 'อัตราครองเตียงเหมาะสม'
+     : 'ความจุเตียงหนาแน่นวิกฤต',
+   statusColor: bedOccupancyPercent <= 90 ? 'success' : 'warning',
+  },
+  {
+   code: 'ALOS',
+   tag: 'การบริหารเตียง',
+   title: '2. วันนอนเฉลี่ยใน ICU (Average Length of Stay: ALOS)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: < 5.0 วัน',
+   targetValue: 5.0,
+   actualValue: alos,
+   unit: `${alos} วัน`,
+   progressPercent: Math.min(100, Math.round((alos / 5.0) * 100)),
+   isPassed: alos <= 5.0,
+   statusText:
+    alos <= 5.0
+     ? 'การหมุนเวียนเตียงมีประสิทธิภาพ'
+     : 'ผู้ป่วยนอนรักษาตัวยาวนานกว่าเกณฑ์',
+   statusColor: alos <= 5.0 ? 'success' : 'warning',
+  },
+  {
+   code: 'READMISSION_48H',
+   tag: 'การบริหารเตียง',
+   title: '3. อัตรากลับเข้า ICU ซ้ำภายใน 48 ชั่วโมง (Readmission Rate 48h)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: < 2.0%',
+   targetValue: 2.0,
+   actualValue: readmissionRate,
+   unit: `${readmissionRate}%`,
+   progressPercent: Math.min(100, Math.round((readmissionRate / 2.0) * 100)),
+   isPassed: readmissionRate <= 2.0,
+   statusText:
+    readmissionRate <= 2.0
+     ? 'ผ่านเกณฑ์ความพร้อมจำหน่าย'
+     : 'เฝ้าระวังการย้ายกลับซ้ำ',
+   statusColor: readmissionRate <= 2.0 ? 'success' : 'error',
+  },
+  {
+   code: 'MORTALITY',
+   tag: 'ผลลัพธ์ทางคลินิก',
+   title: '4. อัตราการเสียชีวิตใน ICU (Crude ICU Mortality Rate)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: < 10.0%',
+   targetValue: 10.0,
+   actualValue: mortalityRate,
+   unit: `${mortalityRate}%`,
+   progressPercent: Math.min(100, Math.round((mortalityRate / 10.0) * 100)),
+   isPassed: mortalityRate <= 10.0,
+   statusText:
+    mortalityRate <= 10.0 ? 'อยู่ในเกณฑ์ควบคุมคุณภาพ' : 'สูงกว่าเกณฑ์เฉลี่ย',
+   statusColor: mortalityRate <= 10.0 ? 'success' : 'error',
+  },
+  {
+   code: 'SMR',
+   tag: 'ผลลัพธ์ทางคลินิก',
+   title: '5. อัตราส่วนการเสียชีวิตมาตรฐาน (Standardized Mortality Ratio: SMR)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: SMR < 1.0 (อิง APACHE II Score)',
+   targetValue: 1.0,
+   actualValue: smr,
+   unit: `${smr}`,
+   progressPercent: Math.min(100, Math.round(smr * 100)),
+   isPassed: smr < 1.0,
+   statusText:
+    smr < 1.0
+     ? 'การรอดชีวิตดีกว่าเกณฑ์คาดการณ์ (Excellent)'
+     : 'อัตราเสียชีวิตสูงกว่าเกณฑ์คาดการณ์',
+   statusColor: smr < 1.0 ? 'success' : 'error',
+  },
+  {
    code: 'VAP',
-   tag: 'มาตรฐานสำคัญ',
-   title: '1. อัตราเกิดการติดเชื้อปอดอักเสบจากการใช้เครื่องช่วยหายใจ (VAP Rate)',
-   targetDescription: 'เป้าหมายมาตรฐานสากล: < 2.5 รายต่อ 1,000 วันเครื่องช่วยหายใจ',
+   tag: 'การติดเชื้อใน รพ.',
+   title: '6. อัตราเกิดการติดเชื้อปอดอักเสบจากเครื่องช่วยหายใจ (VAP Rate)',
+   targetDescription:
+    'เป้าหมายมาตรฐานสากล: < 2.5 ต่อ 1,000 วันเครื่องช่วยหายใจ',
    targetValue: 2.5,
    actualValue: vapRate,
    unit: `${vapRate} / 1,000 วัน`,
    progressPercent: Math.min(100, Math.round((vapRate / 2.5) * 100)),
    isPassed: vapRate < 2.5,
-   statusText: vapRate < 2.5 ? 'ปลอดภัยและผ่านเกณฑ์การประเมิน' : 'เกินเกณฑ์มาตรฐานสากล',
+   statusText:
+    vapRate < 2.5 ? 'ปลอดภัยและผ่านเกณฑ์การประเมิน' : 'เกินเกณฑ์มาตรฐานสากล',
    statusColor: vapRate < 2.5 ? 'success' : 'error',
   },
   {
+   code: 'CLABSI',
+   tag: 'การติดเชื้อใน รพ.',
+   title:
+    '7. การติดเชื้อในกระแสเลือดจากสายสวนหลอดเลือดดำส่วนกลาง (CLABSI Rate)',
+   targetDescription:
+    'เป้าหมายมาตรฐานสากล: < 1.5 ต่อ 1,000 วันสาย Central Line',
+   targetValue: 1.5,
+   actualValue: clabsiRate,
+   unit: `${clabsiRate} / 1,000 วัน`,
+   progressPercent: Math.min(100, Math.round((clabsiRate / 1.5) * 100)),
+   isPassed: clabsiRate < 1.5,
+   statusText:
+    clabsiRate < 1.5 ? 'ปลอดการติดเชื้อในกระแสเลือด' : 'เกินเกณฑ์ควบคุม',
+   statusColor: clabsiRate < 1.5 ? 'success' : 'error',
+  },
+  {
+   code: 'CAUTI',
+   tag: 'การติดเชื้อใน รพ.',
+   title: '8. การติดเชื้อทางเดินปัสสาวะจากการคาสายสวน (CAUTI Rate)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: < 2.0 ต่อ 1,000 วันคาสายสวนปัสสาวะ',
+   targetValue: 2.0,
+   actualValue: cautiRate,
+   unit: `${cautiRate} / 1,000 วัน`,
+   progressPercent: Math.min(100, Math.round((cautiRate / 2.0) * 100)),
+   isPassed: cautiRate < 2.0,
+   statusText: cautiRate < 2.0 ? 'ปลอดภัยผ่านเกณฑ์' : 'เฝ้าระวังการติดเชื้อ',
+   statusColor: cautiRate < 2.0 ? 'success' : 'error',
+  },
+  {
+   code: 'UNPLANNED_EXTUBATION',
+   tag: 'ความปลอดภัย',
+   title:
+    '9. อัตราการเลื่อนหลุดของท่อช่วยหายใจโดยไม่ได้วางแผน (Unplanned Extubation)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: < 2.0 ต่อ 1,000 วันใส่ท่อช่วยหายใจ',
+   targetValue: 2.0,
+   actualValue: unplannedExtubationRate,
+   unit: `${unplannedExtubationRate} / 1,000 วัน`,
+   progressPercent: Math.min(
+    100,
+    Math.round((unplannedExtubationRate / 2.0) * 100),
+   ),
+   isPassed: unplannedExtubationRate <= 2.0,
+   statusText:
+    unplannedExtubationRate <= 2.0
+     ? 'การยึดตรึงท่อปลอดภัย'
+     : 'พบอุบัติการณ์ท่อหลุดเกินเกณฑ์',
+   statusColor: unplannedExtubationRate <= 2.0 ? 'success' : 'error',
+  },
+  {
    code: 'PRESSURE_INJURY',
-   tag: 'มาตรฐานสำคัญ',
-   title: '2. อัตราเกิดแผลกดทับรุนแรงจากการนอนเตียงวิกฤต (Pressure Injury)',
-   targetDescription: 'เป้าหมายมาตรฐานสากล: 0% สำหรับแผลกดทับระดับที่ 3 และ 4',
+   tag: 'ความปลอดภัย',
+   title: '10. อัตราเกิดแผลกดทับระดับ 2 ขึ้นไปใน ICU (Pressure Injury Rate)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: 0% สำหรับระดับ 2 ขึ้นไป',
    targetValue: 0,
-   actualValue: pressureRate,
-   unit: `${pressureRate}%`,
-   progressPercent: Math.min(100, Math.round(pressureRate * 100)),
-   isPassed: pressureRate <= 0.05,
-   statusText: pressureRate === 0
-    ? 'สถิติเป็นศูนย์ (Zero Harm Completed)'
-    : 'ผลประเมินดีเยี่ยม ระดับเฝ้าระวังต่ำมาก',
-   statusColor: 'success',
+   actualValue: pressureInjuryRate,
+   unit: `${pressureInjuryRate}%`,
+   progressPercent: Math.min(100, Math.round(pressureInjuryRate * 100)),
+   isPassed: pressureInjuryRate === 0,
+   statusText:
+    pressureInjuryRate === 0
+     ? 'สถิติเป็นศูนย์ (Zero Harm)'
+     : 'พบแผลกดทับเกิดใหม่',
+   statusColor: pressureInjuryRate === 0 ? 'success' : 'error',
   },
   {
    code: 'MED_ERROR',
-   tag: 'มาตรฐานสำคัญ',
-   title: '3. ความคลาดเคลื่อนในการบริหารเวชภัณฑ์และยารุนแรง (Medication Error)',
-   targetDescription: 'เป้าหมายมาตรฐานสากล: 0 ครั้งในกลุ่มยาความเสี่ยงสูง (HAD)',
+   tag: 'ความปลอดภัย',
+   title: '11. ความคลาดเคลื่อนทางยาระดับ E ขึ้นไป (Medication Error Rate)',
+   targetDescription: 'เป้าหมายมาตรฐานสากล: 0 ครั้งต่อ 1,000 วันนอน',
    targetValue: 0,
-   actualValue: medErrorCount,
-   unit: '0 ครั้ง (ผ่านเกณฑ์เด็ดขาด)',
-   progressPercent: 100,
-   isPassed: true,
-   statusText: 'สถิติเป็นศูนย์ (Zero Harm Completed)',
-   statusColor: 'success',
+   actualValue: medErrorRate,
+   unit: `${medErrorRate} / 1,000 วัน`,
+   progressPercent: medErrorRate === 0 ? 100 : 0,
+   isPassed: medErrorRate === 0,
+   statusText:
+    medErrorRate === 0
+     ? 'สถิติเป็นศูนย์ (Zero Harm Completed)'
+     : 'พบความคลาดเคลื่อนทางยา',
+   statusColor: medErrorRate === 0 ? 'success' : 'error',
   },
  ]
 
@@ -214,8 +437,9 @@ async function calculateLiveKpi(targetWard: string = 'MICU3', yearBe: number = 2
   periodType: 'yearly' as const,
   year: yearBe,
   month: null,
-  title: `ตัวชี้วัดประสิทธิภาพงานบริการวิกฤต (${targetWard} Quality KPIs)`,
-  subtitle: 'เปรียบเทียบสถิติและดัชนีชี้วัดคุณภาพงานวิกฤตพยาบาล ตามเป้าหมายมาตรฐานความปลอดภัยผู้ป่วย (IPSG)',
+  title: `ตัวชี้วัดคุณภาพ ICU (${targetWard} Quality KPIs)`,
+  subtitle:
+   'คำนวณจากข้อมูลผู้ป่วยและการประเมินเตียงรายวันตามเกณฑ์มาตรฐานสากล CDC / HA',
   items,
   stats,
   isDeleted: false,
@@ -279,9 +503,10 @@ export abstract class kpiService {
   const limit = Math.max(1, Number(query?.limit) || 20)
   const page = Math.max(1, Number(query?.page) || 1)
   const skip = (page - 1) * limit
-  const targetWard = (query?.ward && query.ward.toUpperCase() !== 'DASHBOARD')
-   ? query.ward.toUpperCase().trim()
-   : 'MICU3'
+  const targetWard =
+   query?.ward && query.ward.toUpperCase() !== 'DASHBOARD'
+    ? query.ward.toUpperCase().trim()
+    : 'MICU3'
   const targetYear = Number(query?.year) || 2569
 
   try {
@@ -395,13 +620,7 @@ export abstract class kpiService {
   }
  }
 
- static async updateKpi({
-  id,
-  body,
- }: {
-  id: string
-  body: UpdateKpiType
- }) {
+ static async updateKpi({ id, body }: { id: string; body: UpdateKpiType }) {
   try {
    const query: any = { isDeleted: { $ne: true } }
    if (/^[0-9a-fA-F]{24}$/.test(id)) {
