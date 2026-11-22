@@ -9,6 +9,7 @@ import { wardRoutes } from './modules/ward'
 import { dashboardRoutes } from './modules/dashboard'
 import { kpiRoutes } from './modules/kpi'
 import { assessmentRoutes } from './modules/assessment'
+import { contentRoutes } from './modules/content'
 import { movieRoutes } from './routes/movie.route'
 import { userRoutes } from './routes/user.route'
 
@@ -48,6 +49,7 @@ export const app = new Elysia({ prefix: '/api' })
  .use(officialRoutes)
  .use(kpiRoutes)
  .use(assessmentRoutes)
+ .use(contentRoutes)
 
 if (
  process.env.NODE_ENV !== 'production' &&

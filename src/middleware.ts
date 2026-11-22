@@ -5,6 +5,7 @@ import { routing } from './i18n/routing'
 const intlMiddleware = createMiddleware(routing)
 
 const authRoutes = ['/login', '/register']
+const publicRoutes = ['/login', '/register', '/portal']
 const adminOnlyRoutes = ['/users']
 
 function parseTokenPayload(token?: string): { role?: string; exp?: number } | null {
@@ -48,8 +49,11 @@ export default function middleware(req: NextRequest) {
  const isAuthRoute = authRoutes.some((route) =>
   pathWithoutLocale.startsWith(route),
  )
+ const isPublicRoute = publicRoutes.some((route) =>
+  pathWithoutLocale.startsWith(route),
+ )
 
- if (!isAuthenticated && !isAuthRoute) {
+ if (!isAuthenticated && !isPublicRoute) {
   const loginUrl = new URL(`/${currentLocale}/login`, req.url)
   const response = NextResponse.redirect(loginUrl)
   if (token) {

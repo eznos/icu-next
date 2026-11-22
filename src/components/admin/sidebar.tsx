@@ -5,8 +5,10 @@ import { useTranslationsNext } from '@/i18n/use-translate-next'
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import ManageAccountsRoundedIcon from '@mui/icons-material/ManageAccountsRounded'
+import NewspaperRoundedIcon from '@mui/icons-material/NewspaperRounded'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
+import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded'
 import {
  Box,
  Drawer,
@@ -26,9 +28,10 @@ const navIcons = {
  official: <PeopleAltRoundedIcon fontSize='small' />,
  patients: <PeopleAltRoundedIcon fontSize='small' />,
  reports: <DescriptionRoundedIcon fontSize='small' />,
+ content: <NewspaperRoundedIcon fontSize='small' />,
  users: <ManageAccountsRoundedIcon fontSize='small' />,
  settings: <SettingsRoundedIcon fontSize='small' />,
- kpi: <SettingsRoundedIcon fontSize='small' />,
+ kpi: <SpeedRoundedIcon fontSize='small' />,
 }
 
 type SidebarProps = {
@@ -49,6 +52,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
   { key: 'patients', href: `/${locale}/patients` },
   { key: 'kpi', href: `/${locale}/kpi` },
   { key: 'reports', href: `/${locale}/reports` },
+  { key: 'content', href: `/${locale}/content` },
   ...(user?.role === 'admin' ? [{ key: 'users', href: `/${locale}/users` }] : []),
   { key: 'settings', href: `/${locale}/settings` },
  ]
