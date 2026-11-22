@@ -9,6 +9,7 @@ import LocalHospitalRoundedIcon from '@mui/icons-material/LocalHospitalRounded'
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded'
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded'
 import PushPinRoundedIcon from '@mui/icons-material/PushPinRounded'
+import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded'
 import SanitizerRoundedIcon from '@mui/icons-material/SanitizerRounded'
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
 import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded'
@@ -38,7 +39,7 @@ import {
 } from '@mui/material'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const CATEGORY_MAP: Record<
  string,
@@ -54,6 +55,10 @@ const CATEGORY_MAP: Record<
 export default function PortalPage() {
  const params = useParams()
  const locale = (params?.locale as string) || 'th'
+
+ useEffect(() => {
+  document.title = 'MICU Public Portal | ศูนย์ข้อมูลและสารสนเทศหอผู้ป่วยวิกฤต'
+ }, [])
 
  const [search, setSearch] = useState('')
  const [selectedTab, setSelectedTab] = useState('all')
@@ -143,6 +148,30 @@ export default function PortalPage() {
       </Box>
 
       <Stack direction='row' spacing={1.5} sx={{ alignItems: 'center' }}>
+       <Button
+        component={Link}
+        href={`/${locale}/feedback`}
+        variant='outlined'
+        size='small'
+        startIcon={<RateReviewRoundedIcon />}
+        sx={{
+         borderColor: '#0D9488',
+         color: '#0D9488',
+         textTransform: 'none',
+         fontWeight: 700,
+         borderRadius: '8px',
+         px: 2,
+         bgcolor: 'background.paper',
+         '&:hover': {
+          bgcolor: (theme) =>
+           theme.palette.mode === 'dark' ? 'rgba(13, 148, 136, 0.1)' : '#F0FDFA',
+          borderColor: '#0D9488',
+         },
+        }}
+       >
+        ประเมินความพึงพอใจ
+       </Button>
+
        <Button
         component={Link}
         href={`/${locale}/login`}

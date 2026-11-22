@@ -4,6 +4,7 @@ import useSWRMutation from 'swr/mutation'
 export type LoginPayload = {
  username: string
  password: string
+ ward?: string
 }
 
 async function LoginPost(
@@ -39,8 +40,10 @@ async function LoginPost(
 
  if (token) {
   document.cookie = `token=${token}; path=/; max-age=86400; secure; samesite=strict`
-  if (typeof window !== 'undefined' && responseData.data?.user) {
-   localStorage.setItem('user', JSON.stringify(responseData.data.user))
+  const userWard = (responseData as any)?.data?.user?.ward || 'MICU3'
+  document.cookie = `ward=${encodeURIComponent(userWard)}; path=/; max-age=86400; secure; samesite=strict`
+  if (typeof window !== 'undefined' && (responseData as any)?.data?.user) {
+   localStorage.setItem('user', JSON.stringify((responseData as any).data.user))
   }
  }
 

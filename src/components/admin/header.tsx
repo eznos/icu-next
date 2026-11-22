@@ -36,6 +36,7 @@ export function HeaderBar() {
 
  const logout = () => {
   document.cookie = 'token=; path=/; max-age=0;'
+  document.cookie = 'ward=; path=/; max-age=0;'
   if (typeof window !== 'undefined') {
    localStorage.removeItem('user')
   }

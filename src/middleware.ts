@@ -5,7 +5,7 @@ import { routing } from './i18n/routing'
 const intlMiddleware = createMiddleware(routing)
 
 const authRoutes = ['/login', '/register']
-const publicRoutes = ['/login', '/register', '/portal']
+const publicRoutes = ['/login', '/register', '/portal', '/feedback']
 const adminOnlyRoutes = ['/users']
 
 function parseTokenPayload(token?: string): { role?: string; exp?: number } | null {

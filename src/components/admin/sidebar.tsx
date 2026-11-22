@@ -7,6 +7,7 @@ import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded'
 import ManageAccountsRoundedIcon from '@mui/icons-material/ManageAccountsRounded'
 import NewspaperRoundedIcon from '@mui/icons-material/NewspaperRounded'
 import PeopleAltRoundedIcon from '@mui/icons-material/PeopleAltRounded'
+import RateReviewRoundedIcon from '@mui/icons-material/RateReviewRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded'
 import {
@@ -29,6 +30,7 @@ const navIcons = {
  patients: <PeopleAltRoundedIcon fontSize='small' />,
  reports: <DescriptionRoundedIcon fontSize='small' />,
  content: <NewspaperRoundedIcon fontSize='small' />,
+ feedbackAdmin: <RateReviewRoundedIcon fontSize='small' />,
  users: <ManageAccountsRoundedIcon fontSize='small' />,
  settings: <SettingsRoundedIcon fontSize='small' />,
  kpi: <SpeedRoundedIcon fontSize='small' />,
@@ -53,6 +55,7 @@ export function Sidebar({ locale, mobileOpen, onClose }: SidebarProps) {
   { key: 'kpi', href: `/${locale}/kpi` },
   { key: 'reports', href: `/${locale}/reports` },
   { key: 'content', href: `/${locale}/content` },
+  { key: 'feedbackAdmin', href: `/${locale}/feedback-admin` },
   ...(user?.role === 'admin' ? [{ key: 'users', href: `/${locale}/users` }] : []),
   { key: 'settings', href: `/${locale}/settings` },
  ]

@@ -6,44 +6,41 @@ import { authSetup } from '../auth.setup'
 
 export const userRoutes = new Elysia({ prefix: '/user' })
  .use(authSetup)
- .get(
-  '/me',
-  async ({ currentUser, set }) => {
-   if (!currentUser) {
-    set.status = 401
-    return { message: 'Unauthorized', statusCode: 401, data: null }
-   }
+ .get('/me', async ({ currentUser, set }) => {
+  if (!currentUser) {
+   set.status = 401
+   return { message: 'Unauthorized', statusCode: 401, data: null }
+  }
 
-   const user: any = await User.findById(currentUser.id).lean()
-   if (!user) {
-    return {
-     message: 'User found',
-     statusCode: 200,
-     data: {
-      id: currentUser.id,
-      username: currentUser.username || 'Staff',
-      firstName: currentUser.firstName || '',
-      lastName: currentUser.lastName || '',
-      role: currentUser.role,
-      ward: currentUser.ward || 'MICU3',
-     },
-    }
-   }
-
+  const user: any = await User.findById(currentUser.id).lean()
+  if (!user) {
    return {
     message: 'User found',
     statusCode: 200,
     data: {
-     id: user._id.toString(),
-     username: user.username,
-     firstName: user.firstName || '',
-     lastName: user.lastName || '',
-     role: user.role,
-     ward: user.ward || 'MICU3',
+     id: currentUser.id,
+     username: currentUser.username || 'Staff',
+     firstName: currentUser.firstName || '',
+     lastName: currentUser.lastName || '',
+     role: currentUser.role,
+     ward: currentUser.ward || 'MICU3',
     },
    }
-  },
- )
+  }
+
+  return {
+   message: 'User found',
+   statusCode: 200,
+   data: {
+    id: user._id.toString(),
+    username: user.username,
+    firstName: user.firstName || '',
+    lastName: user.lastName || '',
+    role: user.role,
+    ward: user.ward || 'MICU3',
+   },
+  }
+ })
  // 2. Route: Register (สมัครสมาชิก)
  .post(
   '/register',
@@ -75,7 +72,8 @@ export const userRoutes = new Elysia({ prefix: '/user' })
    await newUser.save()
 
    return {
-    message: 'สมัครสมาชิกสำเร็จ กรุณารอผู้ดูแลระบบ (Admin) อนุมัติการเข้าใช้งาน',
+    message:
+     'สมัครสมาชิกสำเร็จ กรุณารอผู้ดูแลระบบ (Admin) อนุมัติการเข้าใช้งาน',
     statusCode: 200,
     data: undefined,
    }
@@ -112,7 +110,15 @@ export const userRoutes = new Elysia({ prefix: '/user' })
     }
    }>
   > => {
-   const { username, password } = body
+   const {
+    username,
+    password,
+    ward: selectedWard,
+   } = body as {
+    username: string
+    password: string
+    ward?: string
+   }
 
    const user = await User.findOne({ username })
    if (!user || !(await Bun.password.verify(password, user.passwordHash))) {
@@ -127,7 +133,8 @@ export const userRoutes = new Elysia({ prefix: '/user' })
    if (user.status === 'pending') {
     set.status = 403
     return {
-     message: 'บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) อนุมัติการเข้าใช้งาน',
+     message:
+      'บัญชีของคุณอยู่ระหว่างรอผู้ดูแลระบบ (Admin) อนุมัติการเข้าใช้งาน',
      statusCode: 403,
      data: undefined,
     }
@@ -142,7 +149,20 @@ export const userRoutes = new Elysia({ prefix: '/user' })
     }
    }
 
-   const userWard = user.ward || 'MICU3'
+   const userWard = user.ward
+
+   if (selectedWard) {
+    const userWardClean = userWard.trim().toUpperCase()
+    const selectedWardClean = selectedWard.trim().toUpperCase()
+    if (selectedWardClean !== userWardClean) {
+     set.status = 400
+     return {
+      message: `หน่วยงาน/หอผู้ป่วยไม่ถูกต้อง คุณไม่มีสิทธิ์เข้าใช้งาน ${selectedWard}`,
+      statusCode: 400,
+      data: undefined,
+     }
+    }
+   }
 
    const token = await jwt.sign({
     id: user._id.toString(),
@@ -172,6 +192,7 @@ export const userRoutes = new Elysia({ prefix: '/user' })
    body: t.Object({
     username: t.String(),
     password: t.String(),
+    ward: t.Optional(t.String()),
    }),
   },
  )
@@ -232,127 +253,127 @@ export const userRoutes = new Elysia({ prefix: '/user' })
   },
  )
 
-  // 6. Route: Get User List (Admin Only)
-  .get('/list', async ({ currentUser, set }) => {
+ // 6. Route: Get User List (Admin Only)
+ .get('/list', async ({ currentUser, set }) => {
+  if (!currentUser || currentUser.role !== 'admin') {
+   set.status = 403
+   return { message: 'Forbidden: Admin Only', statusCode: 403, data: [] }
+  }
+
+  const users = await User.find({})
+   .select('-passwordHash')
+   .sort({ createdAt: -1 })
+   .lean()
+
+  const formattedUsers = users.map((u: any) => ({
+   _id: u._id.toString(),
+   username: u.username,
+   firstName: u.firstName || '',
+   lastName: u.lastName || '',
+   email: u.email,
+   role: u.role || 'user',
+   ward: u.ward || 'MICU3',
+   status: u.status || 'active',
+   createdAt: u.createdAt,
+   updatedAt: u.updatedAt,
+  }))
+
+  return {
+   message: 'ดึงรายชื่อผู้ใช้งานสำเร็จ',
+   statusCode: 200,
+   data: formattedUsers,
+  }
+ })
+
+ // 7. Route: Update User Status (Admin Only)
+ .patch(
+  '/:id/status',
+  async ({ params: { id }, body, currentUser, set }) => {
    if (!currentUser || currentUser.role !== 'admin') {
     set.status = 403
-    return { message: 'Forbidden: Admin Only', statusCode: 403, data: [] }
+    return { message: 'Forbidden: Admin Only', statusCode: 403, data: null }
    }
 
-   const users = await User.find({})
-    .select('-passwordHash')
-    .sort({ createdAt: -1 })
-    .lean()
+   const targetUser: any = await User.findById(id)
+   if (!targetUser) {
+    set.status = 404
+    return { message: 'ไม่พบผู้ใช้งาน', statusCode: 404, data: null }
+   }
 
-   const formattedUsers = users.map((u: any) => ({
-    _id: u._id.toString(),
-    username: u.username,
-    firstName: u.firstName || '',
-    lastName: u.lastName || '',
-    email: u.email,
-    role: u.role || 'user',
-    ward: u.ward || 'MICU3',
-    status: u.status || 'active',
-    createdAt: u.createdAt,
-    updatedAt: u.updatedAt,
-   }))
+   targetUser.status = body.status
+   await targetUser.save()
 
    return {
-    message: 'ดึงรายชื่อผู้ใช้งานสำเร็จ',
+    message: `อัปเดตสถานะเป็น ${body.status} สำเร็จ`,
     statusCode: 200,
-    data: formattedUsers,
+    data: {
+     id: targetUser._id.toString(),
+     status: targetUser.status,
+    },
    }
-  })
+  },
+  {
+   body: t.Object({
+    status: t.Union([
+     t.Literal('pending'),
+     t.Literal('active'),
+     t.Literal('rejected'),
+    ]),
+   }),
+  },
+ )
 
-  // 7. Route: Update User Status (Admin Only)
-  .patch(
-   '/:id/status',
-   async ({ params: { id }, body, currentUser, set }) => {
-    if (!currentUser || currentUser.role !== 'admin') {
-     set.status = 403
-     return { message: 'Forbidden: Admin Only', statusCode: 403, data: null }
-    }
-
-    const targetUser: any = await User.findById(id)
-    if (!targetUser) {
-     set.status = 404
-     return { message: 'ไม่พบผู้ใช้งาน', statusCode: 404, data: null }
-    }
-
-    targetUser.status = body.status
-    await targetUser.save()
-
-    return {
-     message: `อัปเดตสถานะเป็น ${body.status} สำเร็จ`,
-     statusCode: 200,
-     data: {
-      id: targetUser._id.toString(),
-      status: targetUser.status,
-     },
-    }
-   },
-   {
-    body: t.Object({
-     status: t.Union([
-      t.Literal('pending'),
-      t.Literal('active'),
-      t.Literal('rejected'),
-     ]),
-    }),
-   },
-  )
-
-  // 8. Route: Update User Role (Admin Only)
-  .patch(
-   '/:id/role',
-   async ({ params: { id }, body, currentUser, set }) => {
-    if (!currentUser || currentUser.role !== 'admin') {
-     set.status = 403
-     return { message: 'Forbidden: Admin Only', statusCode: 403, data: null }
-    }
-
-    const targetUser: any = await User.findById(id)
-    if (!targetUser) {
-     set.status = 404
-     return { message: 'ไม่พบผู้ใช้งาน', statusCode: 404, data: null }
-    }
-
-    targetUser.role = body.role
-    await targetUser.save()
-
-    return {
-     message: `อัปเดตบทบาทเป็น ${body.role} สำเร็จ`,
-     statusCode: 200,
-     data: {
-      id: targetUser._id.toString(),
-      role: targetUser.role,
-     },
-    }
-   },
-   {
-    body: t.Object({
-     role: t.Union([t.Literal('user'), t.Literal('admin')]),
-    }),
-   },
-  )
-
-  // 9. Route: Delete User (Admin Only)
-  .delete('/:id', async ({ params: { id }, currentUser, set }) => {
+ // 8. Route: Update User Role (Admin Only)
+ .patch(
+  '/:id/role',
+  async ({ params: { id }, body, currentUser, set }) => {
    if (!currentUser || currentUser.role !== 'admin') {
     set.status = 403
-    return { message: 'Forbidden: Admin Only', statusCode: 403 }
+    return { message: 'Forbidden: Admin Only', statusCode: 403, data: null }
    }
 
-   if (currentUser.id === id) {
-    set.status = 400
-    return { message: 'ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้', statusCode: 400 }
-   }
-
-   const deleted = await User.findByIdAndDelete(id)
-   if (!deleted) {
+   const targetUser: any = await User.findById(id)
+   if (!targetUser) {
     set.status = 404
-    return { message: 'ไม่พบผู้ใช้งานที่ต้องการลบ', statusCode: 404 }
+    return { message: 'ไม่พบผู้ใช้งาน', statusCode: 404, data: null }
    }
 
-   return { message: 'ลบผู้ใช้งานสำเร็จ', statusCode: 200 }
-  })
+   targetUser.role = body.role
+   await targetUser.save()
+
+   return {
+    message: `อัปเดตบทบาทเป็น ${body.role} สำเร็จ`,
+    statusCode: 200,
+    data: {
+     id: targetUser._id.toString(),
+     role: targetUser.role,
+    },
+   }
+  },
+  {
+   body: t.Object({
+    role: t.Union([t.Literal('user'), t.Literal('admin')]),
+   }),
+  },
+ )
+
+ // 9. Route: Delete User (Admin Only)
+ .delete('/:id', async ({ params: { id }, currentUser, set }) => {
+  if (!currentUser || currentUser.role !== 'admin') {
+   set.status = 403
+   return { message: 'Forbidden: Admin Only', statusCode: 403 }
+  }
+
+  if (currentUser.id === id) {
+   set.status = 400
+   return { message: 'ไม่สามารถลบบัญชีที่กำลังใช้งานอยู่ได้', statusCode: 400 }
+  }
+
+  const deleted = await User.findByIdAndDelete(id)
+  if (!deleted) {
+   set.status = 404
+   return { message: 'ไม่พบผู้ใช้งานที่ต้องการลบ', statusCode: 404 }
+  }
+
+  return { message: 'ลบผู้ใช้งานสำเร็จ', statusCode: 200 }
+ })

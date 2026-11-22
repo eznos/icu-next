@@ -8,6 +8,42 @@ import { AppThemeProvider } from '@/components/theme/app-theme-provider'
 import { routing } from '@/i18n/routing'
 import { getMessages, setRequestLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(): Promise<Metadata> {
+ const cookieStore = await cookies()
+ const wardCookie = cookieStore.get('ward')?.value
+ let ward = wardCookie ? decodeURIComponent(wardCookie) : null
+
+ if (!ward) {
+  const token = cookieStore.get('token')?.value
+  if (token) {
+   try {
+    const parts = token.split('.')
+    if (parts.length >= 2) {
+     const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+     const decoded = Buffer.from(base64, 'base64').toString('utf-8')
+     const payload = JSON.parse(decoded)
+     if (payload.ward) {
+      ward = payload.ward
+     }
+    }
+   } catch {
+    // Ignore decoding errors
+   }
+  }
+ }
+
+ const activeWard = ward || 'MICU3'
+
+ return {
+  title: {
+   default: `${activeWard} System`,
+   template: `%s | ${activeWard} System`,
+  },
+  description: `ระบบจัดการหออภิบาลผู้ป่วยวิกฤตอายุรกรรม (${activeWard} System)`,
+ }
+}
 
 export default async function LocaleLayout({
  children,

@@ -21,12 +21,16 @@ import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded'
 import { Box, Button, Card, CircularProgress, Grid, Typography } from '@mui/material'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 
 function ContentManagementContent() {
   const params = useParams()
   const locale = (params?.locale as string) || 'th'
   const { showSnackbar } = useSnackBarNotification()
+
+  useEffect(() => {
+    document.title = 'จัดการเนื้อหาและข่าวสาร | MICU3 System'
+  }, [])
 
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')

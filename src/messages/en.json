@@ -21,6 +21,7 @@
         "patients": "Patients",
         "reports": "Reports",
         "content": "Content Management",
+        "feedbackAdmin": "Feedback & Ratings",
         "users": "User Management",
         "settings": "Settings",
         "kpi": "KPI"
@@ -45,6 +46,7 @@
         "title": "Sign in",
         "username": "Username",
         "password": "Password",
+        "ward": "Ward / Department",
         "submit": "Login",
         "menu": {
             "forgotPassword": "Forgot Password?",

@@ -10,6 +10,7 @@ import { dashboardRoutes } from './modules/dashboard'
 import { kpiRoutes } from './modules/kpi'
 import { assessmentRoutes } from './modules/assessment'
 import { contentRoutes } from './modules/content'
+import { feedbackRoutes } from './modules/feedback'
 import { movieRoutes } from './routes/movie.route'
 import { userRoutes } from './routes/user.route'
 
@@ -50,6 +51,7 @@ export const app = new Elysia({ prefix: '/api' })
  .use(kpiRoutes)
  .use(assessmentRoutes)
  .use(contentRoutes)
+ .use(feedbackRoutes)
 
 if (
  process.env.NODE_ENV !== 'production' &&
