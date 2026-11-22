@@ -69,6 +69,11 @@ function formatKpiDoc(doc: any) {
    isPassed: Boolean(it.isPassed),
    statusText: it.statusText || '',
    statusColor: it.statusColor || 'success',
+   numerator: it.numerator || undefined,
+   denominator: it.denominator || undefined,
+   multiplier: typeof it.multiplier === 'number' ? it.multiplier : 1,
+   operator: it.operator || '<=',
+   isActive: it.isActive !== false,
   })),
   stats: doc.stats || undefined,
   isDeleted: Boolean(doc.isDeleted),
@@ -430,27 +435,147 @@ async function calculateLiveKpi(
   },
  ]
 
+ const rawMetrics: Record<string, number> = {
+  totalPatients,
+  activePatientsCount,
+  dischargedCount: dischargedPatients.length,
+  totalPatientDays,
+  readmittedCount,
+  deceasedCount,
+  ventilatorDays,
+  centralLineDays,
+  catheterDays,
+  vapCount,
+  clabsiCount,
+  cautiCount,
+  unplannedExtubations,
+  pressureUlcerCases,
+  medErrorCases,
+  totalBeds,
+  bedOccupancyPercent,
+  alos,
+  readmissionRate,
+  mortalityRate,
+  smr,
+  vapRate,
+  clabsiRate,
+  cautiRate,
+  unplannedExtubationRate,
+  pressureInjuryRate,
+  medErrorRate,
+ }
+
+ const savedDoc: any = await Kpi.findOne({
+  ward: targetWard.toUpperCase().trim(),
+  isDeleted: { $ne: true },
+ }).lean()
+
+ let finalItems = items.map((it) => ({ ...it, isActive: true }))
+ if (savedDoc && Array.isArray(savedDoc.items) && savedDoc.items.length > 0) {
+  finalItems = savedDoc.items.map((savedItem: any) => {
+   if (savedItem.numerator) {
+    const num = rawMetrics[savedItem.numerator] ?? 0
+    const den =
+     savedItem.denominator && savedItem.denominator !== 'none'
+      ? rawMetrics[savedItem.denominator] ?? 0
+      : null
+    const mul = savedItem.multiplier || 1
+
+    let actualValue = 0
+    if (den !== null) {
+     actualValue = den > 0 ? Number(((num / den) * mul).toFixed(2)) : 0
+    } else {
+     actualValue = Number((num * mul).toFixed(2))
+    }
+
+    const op = savedItem.operator || '<='
+    const target = Number(savedItem.targetValue) || 0
+    const isPassed = op === '>=' ? actualValue >= target : actualValue <= target
+    const progressPercent =
+     target > 0
+      ? Math.min(100, Math.max(0, Math.round((actualValue / target) * 100)))
+      : actualValue === 0
+        ? 100
+        : 0
+    const statusText = isPassed ? 'ผ่านเกณฑ์เป้าหมาย' : 'ไม่ผ่านเกณฑ์เป้าหมาย'
+    const statusColor = isPassed ? 'success' : 'error'
+
+    return {
+     code: savedItem.code,
+     tag: savedItem.tag || 'Custom Metric',
+     title: savedItem.title,
+     targetDescription: savedItem.targetDescription || '',
+     targetValue: target,
+     actualValue,
+     unit: savedItem.unit || '',
+     progressPercent,
+     isPassed,
+     statusText: savedItem.statusText || statusText,
+     statusColor: savedItem.statusColor || statusColor,
+     numerator: savedItem.numerator,
+     denominator: savedItem.denominator,
+     multiplier: mul,
+     operator: op,
+     isActive: savedItem.isActive !== false,
+    }
+   }
+
+   const std = items.find((it) => it.code === savedItem.code)
+   if (std) {
+    const target =
+     typeof savedItem.targetValue === 'number'
+      ? savedItem.targetValue
+      : std.targetValue
+    const isPassed =
+     savedItem.operator === '>='
+      ? std.actualValue >= target
+      : std.actualValue <= target
+
+    return {
+     ...std,
+     title: savedItem.title || std.title,
+     tag: savedItem.tag || std.tag,
+     targetDescription: savedItem.targetDescription || std.targetDescription,
+     targetValue: target,
+     isPassed,
+     isActive: savedItem.isActive !== false,
+    }
+   }
+
+   return savedItem
+  })
+ }
+
  const liveKpiDoc = {
-  _id: '6addd5df52520f44cc25b001',
-  objectUuId: crypto.randomUUID(),
+  _id: savedDoc?._id?.toString() || '6addd5df52520f44cc25b001',
+  objectUuId: savedDoc?.objectUuId || crypto.randomUUID(),
   ward: targetWard,
   periodType: 'yearly' as const,
   year: yearBe,
   month: null,
-  title: `ตัวชี้วัดคุณภาพ ICU (${targetWard} Quality KPIs)`,
+  title: savedDoc?.title || `ตัวชี้วัดคุณภาพ ICU (${targetWard} Quality KPIs)`,
   subtitle:
+   savedDoc?.subtitle ||
    'คำนวณจากข้อมูลผู้ป่วยและการประเมินเตียงรายวันตามเกณฑ์มาตรฐานสากล CDC / HA',
-  items,
-  stats,
+  items: finalItems,
+  stats: {
+   ...stats,
+   rawMetrics,
+  },
   isDeleted: false,
   deletedAt: null,
-  createdAt: new Date().toISOString(),
+  createdAt: savedDoc?.createdAt
+   ? new Date(savedDoc.createdAt).toISOString()
+   : new Date().toISOString(),
   updatedAt: new Date().toISOString(),
  }
 
  return {
   kpiDoc: liveKpiDoc,
-  stats,
+  stats: {
+   ...stats,
+   rawMetrics,
+  },
  }
 }
 
@@ -554,7 +679,29 @@ export abstract class kpiService {
     }
    }
 
-   const formattedList = docs.map((doc: any) => formatKpiDoc(doc))
+   const formattedList = docs.map((doc: any) => {
+    const formatted = formatKpiDoc(doc)
+    const mergedItems = (formatted.items || []).map((it: any) => {
+     const liveItem = liveResult.kpiDoc.items.find((l) => l.code === it.code)
+     return {
+      ...liveItem,
+      ...it,
+      title: it.title || liveItem?.title || it.code,
+      tag: it.tag || liveItem?.tag || 'มาตรฐานสำคัญ',
+      targetDescription:
+       it.targetDescription || liveItem?.targetDescription || '',
+      actualValue: it.actualValue ?? liveItem?.actualValue ?? 0,
+      unit: it.unit || liveItem?.unit || '',
+      isPassed: typeof it.isPassed === 'boolean' ? it.isPassed : liveItem?.isPassed ?? true,
+      isActive: it.isActive !== false,
+     }
+    })
+
+    return {
+     ...formatted,
+     items: mergedItems.length > 0 ? mergedItems : liveResult.kpiDoc.items,
+    }
+   })
 
    return {
     data: formattedList,
@@ -703,5 +850,75 @@ export abstract class kpiService {
     statusCode: 500,
    })
   }
+ }
+
+ static async updateWardKpiItems({
+  ward,
+  items,
+ }: {
+  ward: string
+  items: IKpiItem[]
+ }) {
+  try {
+   const upperWard = (ward || 'MICU3').toUpperCase().trim()
+   const yearBe = 2569
+
+   let doc: any = await Kpi.findOne({
+    ward: upperWard,
+    isDeleted: { $ne: true },
+   })
+
+   if (!doc) {
+    doc = new Kpi({
+     objectUuId: crypto.randomUUID(),
+     ward: upperWard,
+     periodType: 'yearly',
+     year: yearBe,
+     title: `ตัวชี้วัดคุณภาพ ICU (${upperWard} Quality KPIs)`,
+     subtitle:
+      'คำนวณจากข้อมูลผู้ป่วยและการประเมินเตียงรายวันตามเกณฑ์มาตรฐานสากล CDC / HA',
+     items,
+    })
+   } else {
+    doc.items = items
+   }
+
+   await doc.save()
+
+   const liveResult = await calculateLiveKpi(upperWard, yearBe)
+   return {
+    data: liveResult.kpiDoc,
+    stats: liveResult.stats,
+    message: 'บันทึกการตั้งค่าตัวชี้วัด (KPI) สำเร็จ',
+    statusCode: 200,
+   }
+  } catch (error: any) {
+   return status(500, {
+    error: error.message || 'Update failed',
+    message: 'บันทึกการตั้งค่า KPI ไม่สำเร็จ',
+    statusCode: 500,
+   })
+  }
+ }
+
+ static getAvailableMetrics() {
+  return [
+   { key: 'vapCount', label: 'จำนวนติดเชื้อ VAP (ครั้ง)', unit: 'ครั้ง', category: 'การติดเชื้อ' },
+   { key: 'clabsiCount', label: 'จำนวนติดเชื้อ CLABSI (ครั้ง)', unit: 'ครั้ง', category: 'การติดเชื้อ' },
+   { key: 'cautiCount', label: 'จำนวนติดเชื้อ CAUTI (ครั้ง)', unit: 'ครั้ง', category: 'การติดเชื้อ' },
+   { key: 'unplannedExtubations', label: 'จำนวนท่อช่วยหายใจเลื่อนหลุด (ครั้ง)', unit: 'ครั้ง', category: 'ความปลอดภัย' },
+   { key: 'pressureUlcerCases', label: 'จำนวนแผลกดทับ Stage 2+ (ราย)', unit: 'ราย', category: 'ความปลอดภัย' },
+   { key: 'medErrorCases', label: 'จำนวน Medication Error Grade E+ (ครั้ง)', unit: 'ครั้ง', category: 'ความปลอดภัย' },
+   { key: 'deceasedCount', label: 'ผู้ป่วยเสียชีวิต (Deceased Patients)', unit: 'คน', category: 'ผลลัพธ์ทางคลินิก' },
+   { key: 'readmittedCount', label: 'ผู้ป่วยกลับเข้า ICU ซ้ำใน 48 ชม.', unit: 'คน', category: 'การบริหารเตียง' },
+   { key: 'activePatientsCount', label: 'ผู้ป่วยครองเตียงปัจจุบัน (Active Patients)', unit: 'คน', category: 'การบริหารเตียง' },
+   { key: 'totalPatients', label: 'จำนวนผู้ป่วยสะสมทั้งหมด (Total Patients)', unit: 'คน', category: 'ทั่วไป' },
+   { key: 'dischargedCount', label: 'ผู้ป่วยจำหน่ายสะสม (Discharged Patients)', unit: 'คน', category: 'ทั่วไป' },
+   { key: 'totalPatientDays', label: 'วันนอนสะสม (Patient-Days)', unit: 'วัน', category: 'ทั่วไป' },
+   { key: 'ventilatorDays', label: 'วันใช้เครื่องช่วยหายใจ (Ventilator-Days)', unit: 'วัน', category: 'อุปกรณ์' },
+   { key: 'centralLineDays', label: 'วันใส่สาย Central Line (Device-Days)', unit: 'วัน', category: 'อุปกรณ์' },
+   { key: 'catheterDays', label: 'วันใส่สาย Foley Catheter (Device-Days)', unit: 'วัน', category: 'อุปกรณ์' },
+   { key: 'totalBeds', label: 'จำนวนเตียงทั้งหมดของ Ward (Beds)', unit: 'เตียง', category: 'การบริหารเตียง' },
+  ]
  }
 }

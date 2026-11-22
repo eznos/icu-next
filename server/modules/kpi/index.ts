@@ -124,6 +124,30 @@ export const kpiRoutes = new Elysia({ prefix: '/kpi' })
    },
   },
  )
+ .put(
+  '/ward/:ward',
+  async ({ params, body }) => {
+   const response = await kpiService.updateWardKpiItems({
+    ward: params.ward,
+    items: (body as any).items,
+   })
+   return response
+  },
+  {
+   params: t.Object({
+    ward: t.String(),
+   }),
+   body: t.Object({
+    items: t.Array(t.Any()),
+   }),
+  },
+ )
+ .get('/metrics', async () => {
+  return {
+   data: kpiService.getAvailableMetrics(),
+   statusCode: 200,
+  }
+ })
 
 export * from './model'
 export * from './service'

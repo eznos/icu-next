@@ -21,6 +21,11 @@ export const KpiItemSchema = t.Object({
  isPassed: t.Optional(t.Boolean({ description: 'สถานะผ่านเกณฑ์การประเมินหรือไม่' })),
  statusText: t.Optional(t.String({ description: 'ข้อความผลการประเมิน' })),
  statusColor: t.Optional(t.String({ description: 'สีสถานะ เช่น success, warning, error', default: 'success' })),
+ numerator: t.Optional(t.String({ description: 'ตัวตั้งในสูตรคำนวณ' })),
+ denominator: t.Optional(t.String({ description: 'ตัวหารในสูตรคำนวณ' })),
+ multiplier: t.Optional(t.Number({ description: 'ตัวคูณ เช่น 1, 100, 1000' })),
+ operator: t.Optional(t.String({ description: 'เกณฑ์การเปรียบเทียบ เช่น <= หรือ >=' })),
+ isActive: t.Optional(t.Boolean({ description: 'เปิด/ปิดการแสดงผลตัวชี้วัด', default: true })),
 })
 
 export const KpiStatsSchema = t.Object({
@@ -100,6 +105,11 @@ export interface IKpiItem {
  isPassed?: boolean
  statusText?: string
  statusColor?: string
+ numerator?: string
+ denominator?: string
+ multiplier?: number
+ operator?: string
+ isActive?: boolean
 }
 
 export interface IKpi extends Document {
@@ -139,6 +149,11 @@ export const KpiMongooseSchema = new Schema<IKpi>(
     isPassed: { type: Boolean, default: true },
     statusText: { type: String, default: '' },
     statusColor: { type: String, default: 'success' },
+    numerator: { type: String, default: '' },
+    denominator: { type: String, default: '' },
+    multiplier: { type: Number, default: 1 },
+    operator: { type: String, default: '<=' },
+    isActive: { type: Boolean, default: true },
    },
   ],
   isDeleted: { type: Boolean, default: false, index: true },

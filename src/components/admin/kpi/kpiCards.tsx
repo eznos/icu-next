@@ -3,6 +3,7 @@
 import { KpiItem, KpiRecord, KpiStats } from '@/apis/kpi'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import DataThresholdingRoundedIcon from '@mui/icons-material/DataThresholdingRounded'
+import EditRoundedIcon from '@mui/icons-material/EditRounded'
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded'
 import HotelRoundedIcon from '@mui/icons-material/HotelRounded'
 import MedicalServicesRoundedIcon from '@mui/icons-material/MedicalServicesRounded'
@@ -13,13 +14,16 @@ import {
  Card,
  CardContent,
  Grid,
+ IconButton,
  LinearProgress,
+ Tooltip,
  Typography,
 } from '@mui/material'
 
 type KpiCardsProps = {
  kpiRecord?: KpiRecord | null
  stats?: KpiStats | null
+ onEditItem?: (item: KpiItem) => void
 }
 
 const colorConfig = [
@@ -52,8 +56,9 @@ const colorConfig = [
  },
 ]
 
-export const KpiCards = ({ kpiRecord, stats }: KpiCardsProps) => {
- const items: KpiItem[] = kpiRecord?.items || []
+export const KpiCards = ({ kpiRecord, stats, onEditItem }: KpiCardsProps) => {
+ const allItems: KpiItem[] = kpiRecord?.items || []
+ const items = allItems.filter((it) => it.isActive !== false)
  const kpiStats = stats || kpiRecord?.stats
  const evaluationYear = kpiStats?.evaluationYearBe || kpiRecord?.year || 2569
 
@@ -137,8 +142,15 @@ export const KpiCards = ({ kpiRecord, stats }: KpiCardsProps) => {
           height: '100%',
          }}
         >
-         {/* Tag badge */}
-         <Box sx={{ mb: 1.5 }}>
+         {/* Tag badge and Edit action button */}
+         <Box
+          sx={{
+           display: 'flex',
+           justifyContent: 'space-between',
+           alignItems: 'center',
+           mb: 1.5,
+          }}
+         >
           <Box
            component='span'
            sx={{
@@ -156,6 +168,33 @@ export const KpiCards = ({ kpiRecord, stats }: KpiCardsProps) => {
           >
            {item.tag || 'มาตรฐานสำคัญ'}
           </Box>
+          {onEditItem && (
+           <Tooltip title={`แก้ไขตัวชี้วัด "${item.title}"`}>
+            <IconButton
+             size='small'
+             onClick={() => onEditItem(item)}
+             sx={{
+              p: 0.5,
+              color: 'text.secondary',
+              bgcolor: (theme) =>
+               theme.palette.mode === 'dark'
+                ? 'rgba(255, 255, 255, 0.05)'
+                : '#F1F5F9',
+              border: '1px solid',
+              borderColor: 'divider',
+              '&:hover': {
+               bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                 ? 'rgba(255, 255, 255, 0.12)'
+                 : '#E2E8F0',
+               color: '#0D9488',
+              },
+             }}
+            >
+             <EditRoundedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+           </Tooltip>
+          )}
          </Box>
 
          {/* Title */}
